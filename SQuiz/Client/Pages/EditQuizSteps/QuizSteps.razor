@@ -1,0 +1,85 @@
+﻿@using FluentValidation.Results
+@using SQuiz.Client.Shared.Components
+@using SQuiz.Shared.Dtos.Quiz
+@inject NavigationManager NavigationManager
+
+<Steps Title="@StepsTitle" @ref="Steps">
+    <SubHeaderContent>
+        <p class="alert-danger">@AfterSubmitErrorMessage</p>
+    </SubHeaderContent>
+    <ChildContent>
+        <CascadingValue Value="this">
+            <QuizDetailStepItem></QuizDetailStepItem>
+            <ManageQuestionsStepItem></ManageQuestionsStepItem>
+            @foreach (var question in Model.Questions)
+            {
+                <QuizQuestionStepItem Question="question"></QuizQuestionStepItem>
+            }
+            <QuizReviewStepItem></QuizReviewStepItem>
+        </CascadingValue>
+    </ChildContent>
+</Steps>
+
+@code {
+    public Steps? Steps { get; set; }
+
+    public EditQuizDto Model { get; set; } = new EditQuizDto();
+
+    private string StepsTitle => Mode == MODE.CREATE ? "Create Quiz" : "Edit Quiz";
+    private string? AfterSubmitErrorMessage { get; set; }
+
+    public void NavigateTo(int index)
+    {
+        Steps?.NavigateTo(index);
+    }
+
+    [Parameter]
+    public EditQuizDto? InitialModel { get; set; }
+    [Parameter]
+    public MODE Mode { get; set; } = MODE.CREATE;
+    [Parameter]
+    public Func<EditQuizDto, Task<string>> SubmitHandler { get; set; }
+    [Parameter]
+    public Func<EditQuizDto, ValidationResult> ValidateHandler { get; set; }
+
+    public ValidationResult? ValidationResult { get; set; }
+    
+    public void Rerender() 
+    {
+        StateHasChanged();
+    }
+    
+    public async Task Save()
+    {
+        AfterSubmitErrorMessage = string.Empty;
+        ValidationResult = ValidateHandler(Model);
+        
+        if (ValidationResult != null && !ValidationResult.IsValid) 
+        {
+            return;
+        }
+
+        AfterSubmitErrorMessage = await SubmitHandler(Model);
+        
+        if (string.IsNullOrEmpty(AfterSubmitErrorMessage))
+        {
+            NavigationManager.NavigateTo(NavigationManager.BaseUri, false);
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        if (InitialModel != null) 
+        {
+            Model.IsPublic = InitialModel.IsPublic;
+            Model.Questions = InitialModel.Questions;
+            Model.Description = InitialModel.Description;
+        }
+    }
+
+    public enum MODE 
+    {
+        CREATE,
+        EDIT
+    }
+}

@@ -1,0 +1,127 @@
+﻿@using SQuiz.Client.Shared.Components
+@using SQuiz.Shared.Dtos.Quiz
+@using SQuiz.Shared.Extensions
+@using SQuiz.Shared.Models
+
+<StepItem Title="@Title" Order=@(QuestionIndex + 2)>
+    <div>
+        <button class="btn btn-secondary m-1" @onclick="BackToManageQuestions">Manage Questions</button>
+        <ValidationErrorMessage Model="Model" For=@($"Questions[{QuestionIndex}].QuestionText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
+        <div class="input-group m-1">
+            <label class="form-control">Question Text</label>
+            <input class="form-control w-50" @bind-value="Question.QuestionText" />
+        </div>
+        <div class="input-group m-1">
+            <label class="form-control">Answering Time</label>
+            <select class="form-select w-50" @bind="Question.AnsweringTime">
+                @foreach (var answeringTime in Enum.GetValues<Question.ANSWERING_TIME>())
+                {
+                    <option value="@answeringTime">@answeringTime.ToString()</option>
+                }
+            </select>
+        </div>
+        <div class="input-group m-1">
+            <label class="form-control">Answering Points</label>
+            <select class="form-select w-50" @bind="Question.Points">
+                @foreach (var pointsTime in Enum.GetValues<Question.POINTS>())
+                {
+                    <option value="@pointsTime">@pointsTime.ToString()</option>
+                }
+            </select>
+        </div>
+        <table class="table-striped w-100">
+            <tr>
+                <th>Name</th>
+                <th>Value</th>
+                <th>@(Question.CorrectAnswerIndex + 1) Is Correct</th>
+            </tr>
+            @for (var answerIndex = 0; answerIndex < Question.Answers.Count; ++answerIndex)
+            {
+                var answer = Question.Answers[answerIndex];
+                var isCorrect = answerIndex == Question.CorrectAnswerIndex;
+                var isRequired = answerIndex < 2;
+                <tr>
+                    <td colspan="2">
+                        <ValidationErrorMessage Model="Model" For=@($"Questions[{QuestionIndex}].Answers[{answerIndex}].AnswerText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
+                        <div class="input-group m-1">
+                            <label class="form-control">Answer @(answerIndex + 1) @(isRequired ? "*" : "")</label>
+                            <input class="form-control w-50" @bind-value="answer.AnswerText" />
+                        </div>
+                    </td>
+                    <td>
+                        <input class="m-3" data-toggle="toggle" type="radio" name="isCorrect" value="@answerIndex"
+                            @onchange="@(e => Question.CorrectAnswerIndex = int.Parse(e?.Value.ToString()))"
+                           checked=@(Question.CorrectAnswerIndex == answerIndex) />
+                        @if (answerIndex != 0)
+                        {
+                            <button class="btn rounded oi oi-arrow-top" @onclick=@(() => MoveUp(answer))></button>
+                        }
+                        @if (answerIndex + 1 != Question.Answers.Count)
+                        {
+                            <button class="btn rounded oi oi-arrow-bottom" @onclick=@(() => MoveDown(answer))></button>
+                        }
+                        @if (answerIndex > 1)
+                        {
+                            <button class="btn-close float-end" @onclick=@(() => DeleteAnswer(answer))></button>
+                        }
+                    </td>
+                </tr>
+                
+            }
+        </table>
+        <button class="btn btn-secondary m-1" @onclick="AddAnswer">Add answer</button>
+
+    </div>
+</StepItem>
+
+@code {
+    [CascadingParameter]
+    public QuizSteps Parent { get; set; }
+
+    [Parameter]
+    public QuestionDto Question { get; set; }
+
+    public EditQuizDto Model => Parent.Model;
+
+    public EditQuizDto? InitialModel => Parent.InitialModel;
+
+    public int QuestionIndex => Model.Questions.IndexOf(Question);
+
+    public string Title => $"Question {QuestionIndex + 1}";
+
+    protected override void OnInitialized()
+    {
+        if (Question.Answers.Count == 0) 
+        {
+            Question.Answers.Add(new AnswerDto());
+            Question.Answers.Add(new AnswerDto());
+        }
+    }
+
+    public void BackToManageQuestions() 
+    {
+        Parent.NavigateTo(1);
+    }
+
+    public void AddAnswer() 
+    {
+        Question.Answers.Add(new AnswerDto());
+    }
+
+    public void DeleteAnswer(AnswerDto answer) 
+    {
+        Question.Answers.Remove(answer);
+    }
+
+    public void MoveDown(AnswerDto answer) 
+    {
+        var currentIndex = Question.Answers.IndexOf(answer);
+        Question.Answers.Swap(currentIndex, currentIndex + 1);
+    }
+
+    public void MoveUp(AnswerDto answer)
+    {
+        var currentIndex = Question.Answers.IndexOf(answer);
+        Question.Answers.Swap(currentIndex, currentIndex - 1);
+    }
+}

@@ -1,0 +1,78 @@
+﻿@using SQuiz.Client.Shared.Components
+@using SQuiz.Shared.Dtos.Quiz
+
+<StepItem Title="Review details" Order=@(Model.Questions.Count + 3)>
+    <div class="container">
+        <div class="list-group">
+            <div class="list-group-item">
+                <div class="row">
+                    <div class="col-3">
+                        Quiz Name:
+                    </div>
+                    <div class="col">
+                        @Model.Name
+                    </div>
+                </div>
+            </div>
+            <div class="list-group-item">
+                <div class="row">
+                    <div class="col-3">
+                        Quiz Description:
+                    </div>
+                    <div class="col">
+                        @Model.Description
+                    </div>
+                </div>
+            </div>
+            <div class="list-group-item">
+                <div class="row">
+                    <div class="col-3">
+                        Is public:
+                    </div>
+                    <div class="col">
+                        @(Model.IsPublic ? "Yes" : "No")
+                    </div>
+                </div>
+            </div>
+
+            @foreach(var q in Model.Questions)
+            {
+                var i = Model.Questions.IndexOf(q);
+                <div class="list-group-item">
+                    <div class="row">
+                        <div class="col-12">
+                            <span class="small">@(i + 1). </span>
+                            <span>@q.QuestionText</span>
+                        </div>
+
+                        @foreach (var a in q.Answers)
+                        {
+                            var j = q.Answers.IndexOf(a);
+                            <div class="col-12">
+                                <span class="small">Variant @(j + 1).</span>
+                                @if (j == q.CorrectAnswerIndex)
+                                {
+                                    <span class="small">(Is correct)</span>
+                                }
+                                <span>@a.AnswerText</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+        </div>
+        <div class="m-3 text-center">
+            <button class="btn btn-sm btn-primary" @onclick="Parent.Save">Save</button>
+        </div>
+    </div>
+</StepItem>
+
+@code {
+    [CascadingParameter]
+    public QuizSteps Parent { get; set; }
+
+    public EditQuizDto Model => Parent.Model;
+
+    public EditQuizDto? InitialModel => Parent.InitialModel;
+}

@@ -1,0 +1,31 @@
+﻿@using FluentValidation.Results
+@using System.Linq.Expressions
+@typeparam T
+
+<p class="alert-danger">
+    @Message
+</p>
+
+@code {
+    [Parameter]
+    public T Model { get; set; }
+
+    [Parameter]
+    public  string For { get; set; }
+
+
+    [Parameter]
+    public ValidationResult ValidationResult { get; set; }
+
+    public string? Message
+    {
+        get
+        {
+            var msg = ValidationResult?.IsValid ?? true ? string.Empty
+            : ValidationResult.Errors
+            .FirstOrDefault(x => x.PropertyName == For)?.ErrorMessage;
+            
+            return msg;
+        }
+    }
+}

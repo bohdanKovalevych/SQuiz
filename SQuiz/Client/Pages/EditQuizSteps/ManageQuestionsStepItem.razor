@@ -1,0 +1,115 @@
+﻿@using SQuiz.Client.Shared.Components
+@using SQuiz.Shared.Dtos.Quiz
+@using SQuiz.Shared.Extensions
+
+<StepItem Title="Manage Questions" Order="1">
+    <div>
+        <div class="m-1" >
+            <div class="list-group">
+                @for(var questionIndex = 0; questionIndex < Model.Questions.Count; ++questionIndex) 
+                {
+                    var question = Model.Questions[questionIndex];
+                    <div class="list-group-item">
+                        
+                        <div class="row">
+                            <span class="small col-3">Question @(questionIndex + 1)</span>
+                            <span class="small text-truncate col-3">@question.QuestionText</span>
+
+                            <div class="col">
+                                <button class="btn btn-danger oi oi-trash float-end" @onclick=@(() => RemoveQuestion(question))></button>
+                                <button class="btn btn-outline-dark oi oi-pencil float-end" @onclick=@(() => NavigateToEditQuestion(question))></button>
+                                @if (questionIndex + 1 != Model.Questions.Count)
+                                {
+                                    <button class="btn btn-outline-dark oi oi-arrow-bottom float-end" @onclick=@(() => MoveDown(question))></button>
+                                }
+                                @if (questionIndex > 0)
+                                {
+                                    <button class="btn btn-outline-dark oi oi-arrow-top float-end" @onclick=@(() => MoveUp(question))></button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        <button class="btn btn-primary m-1" @onclick="AddQuestion">Add Question</button>
+    </div>
+</StepItem>
+
+@code {
+    [CascadingParameter]
+    public QuizSteps Parent { get; set; }
+
+    [Parameter]
+    public QuestionDto Question { get; set; }
+
+    public EditQuizDto Model => Parent.Model;
+
+    public EditQuizDto? InitialModel => Parent.InitialModel;
+
+    public void AddQuestion() 
+    {
+        Model.Questions.Add(new QuestionDto());
+        Parent.Rerender();
+    }
+
+    public void RemoveQuestion(QuestionDto question)
+    {
+        Model.Questions.Remove(question);
+        Parent.Rerender();
+    }
+
+    public void NavigateToEditQuestion(QuestionDto question) 
+    {
+        var questionStartIndex = 3;
+        var questionIndex = Model.Questions.IndexOf(question);
+        Parent.NavigateTo(questionIndex + questionStartIndex);
+    }
+
+    public void MoveUp(QuestionDto question)
+    {
+        var index = Model.Questions.IndexOf(question);
+        Model.Questions.Swap(index, index - 1);
+    }
+
+    public void MoveDown(QuestionDto question)
+    {
+        var index = Model.Questions.IndexOf(question);
+        Model.Questions.Swap(index, index + 1);
+    }
+
+    //TODO remove method
+    protected override void OnInitialized()
+    {
+        Model.Name = "name";
+        Model.Description = "desrc";
+        Model.Questions.Add(new QuestionDto() {QuestionText = "text", Answers = new List<AnswerDto>()
+        {
+            new AnswerDto()
+            { 
+                AnswerText = "a"
+            },
+            new AnswerDto()
+            {
+                AnswerText = "b"
+            },
+        }});
+
+        Model.Questions.Add(new QuestionDto()
+            {
+                QuestionText = "very long question 2 I think and gess it will be",
+                Answers = new List<AnswerDto>()
+        {
+            new AnswerDto()
+            {
+                AnswerText = "a"
+            },
+            new AnswerDto()
+            {
+                AnswerText = "b"
+            },
+        }
+            });
+        Parent.Rerender();
+    }
+}

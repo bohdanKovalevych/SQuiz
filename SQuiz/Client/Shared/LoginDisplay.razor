@@ -1,0 +1,50 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+
+@inject NavigationManager Navigation
+@inject SignOutSessionStateManager SignOutManager
+@inject HttpClient HttpClient
+@implements IDisposable
+
+<AuthorizeView>
+    <Authorized>
+        Hello, @context.User.Identity?.Name!
+        <button class="nav-link btn btn-link" @onclick="BeginLogout">Log out</button>
+    </Authorized>
+    <NotAuthorized>
+        <a href="authentication/login">Log in</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code{
+    protected override async Task OnInitializedAsync()
+    {
+        Navigation.LocationChanged += ChangeLocation;
+    }
+
+    private async void ChangeLocation(object? sender, LocationChangedEventArgs args)
+    {
+        if (args.Location.EndsWith("/authentication/login-callback#")) 
+        {
+            try {
+                var resp = await HttpClient.PostAsync("Auth", null);
+            } 
+            catch (Exception e) {
+
+            }
+            
+        }
+    }
+
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= ChangeLocation;
+    }
+
+    private async Task BeginLogout(MouseEventArgs args)
+    {
+        await SignOutManager.SetSignOutState();
+        Navigation.NavigateTo("authentication/logout");
+    }
+
+}

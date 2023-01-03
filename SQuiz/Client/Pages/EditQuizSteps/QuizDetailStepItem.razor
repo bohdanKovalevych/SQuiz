@@ -1,0 +1,32 @@
+﻿@using SQuiz.Client.Shared.Components
+@using SQuiz.Shared.Dtos.Quiz
+<StepItem Title="Quiz" Order="0">
+        <div>
+            <ValidationErrorMessage Model="Parent.Model" For="Name" ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
+            
+            <div class="input-group m-1">
+                <label class="form-control">Name for Quiz</label>
+                <input class="form-control w-50" @bind-value="Model.Name" />
+            </div>
+            <div class="input-group m-1">
+                <label class="form-control">Description</label>
+                <textarea class="form-control w-50" @bind="Model.Description"></textarea>
+            </div>
+            <div class="input-group">
+                <input id="isPublicBtn" class="form-check-input m-2" type="checkbox"  @bind="Model.IsPublic"/>
+                <label for="isPublicBtn" class="form-check-label m-1">Is public</label>
+            </div>
+            <div class="m-3 text-center">
+                <button class="btn btn-sm btn-primary" @onclick="Parent.Save">Save and configure next steps later</button>
+            </div>
+        </div>
+</StepItem>
+
+@code {
+    [CascadingParameter]
+    public QuizSteps Parent { get; set; }
+
+    public EditQuizDto Model => Parent.Model;
+
+    public EditQuizDto? InitialModel => Parent.InitialModel;
+}

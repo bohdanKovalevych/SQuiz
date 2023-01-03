@@ -1,0 +1,35 @@
+﻿@using FluentValidation
+@using FluentValidation.Results
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using SQuiz.Shared.Dtos.Quiz
+@inject IValidator<EditQuizDto> Validator
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<QuizSteps Mode="QuizSteps.MODE.CREATE" 
+    ValidateHandler="Validate"
+    SubmitHandler="CreateNewQuiz">
+
+</QuizSteps>
+
+@code {
+    public ValidationResult Validate(EditQuizDto quiz) 
+    {
+        return Validator.Validate(quiz); 
+    }
+
+    public async Task<string> CreateNewQuiz(EditQuizDto quiz) 
+    {
+        string? message = null;
+        try {
+            var result = await Http.PostAsJsonAsync("Quizzes", quiz);
+            message = await result.Content.ReadFromJsonAsync<string>();
+        }
+        catch (AccessTokenNotAvailableException exception)
+        {
+            exception.Redirect();
+        } 
+        
+        return message;
+    }
+}

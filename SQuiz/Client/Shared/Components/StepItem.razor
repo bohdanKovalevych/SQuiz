@@ -1,0 +1,52 @@
+﻿
+@if (Parent.ActiveStepItem == this) 
+{
+    <div>
+        <p><h4>@Title</h4></p>
+        @ChildContent
+        <div>
+            <button @onclick="GoPrev" class="btn btn-sm btn-outline-secondary m-1" disabled="@(!ShowPrev)">Previous Step</button>
+            <button @onclick="GoNext" class="btn btn-sm btn-outline-secondary float-end m-1" disabled="@(!ShowNext)">Next Step</button>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter]
+    public Steps Parent { get; set; }
+
+    [Parameter]
+    public bool ShowInNavigation { get; set; } = true;
+
+    [Parameter] 
+    public string Title { get; set; }
+
+    [Parameter]
+    public int Order { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    public int Index => Parent.StepItems.IndexOf(this);
+    public bool ShowPrev => Index > 0;
+    public bool ShowNext => Index < Parent.StepItems.Count - 1;
+    
+    public void GoNext() 
+    {
+        Parent.ActivateStepItem(Parent.StepItems[Index + 1]);
+    }
+    
+    public void GoPrev()
+    {
+        Parent.ActivateStepItem(Parent.StepItems[Index - 1]);
+    }
+
+    protected override void OnInitialized()
+    {
+        if (!Parent.StepItems.Contains(this)) 
+        {
+            Parent.AddStepItem(this);
+        }
+    }
+
+}
