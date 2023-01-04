@@ -1,0 +1,50 @@
+﻿@using SQuiz.Shared.Dtos.Quiz
+
+@inject HttpClient Http
+
+Quiz table
+
+@if(Items == null)
+{
+    <span>Loading...</span>
+}
+else
+{
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr class="sticky-lg-top">
+                <th scope="col">Id</th>
+                <th scope="col">Name</th>
+                <th scope="col">Questions Count</th>
+                <th scope="col">Is public</th>
+                <th scope="col">Description</th>
+                <th scope="col">Date updated</th>
+                <th scope="col">Date created</th>
+            </tr>
+        </thead>
+        
+        <tbody>
+            @foreach(var item in Items) 
+            {
+                <tr>
+                    <td scope="row">@item.ShortId</td>
+                    <td >@item.Name</td>
+                    <td >@item.QuestionsCount</td>
+                    <td >@item.IsPublic</td>
+                    <td ><span>@item.Description</span> </td>
+                    <td >@item.DateUpdated</td>
+                    <td >@item.DateCreated</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    public List<QuizOptionDto>? Items { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Items = await Http.GetFromJsonAsync<List<QuizOptionDto>>("Quizzes");
+    }
+}
