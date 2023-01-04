@@ -61,7 +61,7 @@
 
     public void NavigateToEditQuestion(QuestionDto question) 
     {
-        var questionStartIndex = 3;
+        var questionStartIndex = 2;
         var questionIndex = Model.Questions.IndexOf(question);
         Parent.NavigateTo(questionIndex + questionStartIndex);
     }
@@ -76,40 +76,5 @@
     {
         var index = Model.Questions.IndexOf(question);
         Model.Questions.Swap(index, index + 1);
-    }
-
-    //TODO remove method
-    protected override void OnInitialized()
-    {
-        Model.Name = "name";
-        Model.Description = "desrc";
-        Model.Questions.Add(new QuestionDto() {QuestionText = "text", Answers = new List<AnswerDto>()
-        {
-            new AnswerDto()
-            { 
-                AnswerText = "a"
-            },
-            new AnswerDto()
-            {
-                AnswerText = "b"
-            },
-        }});
-
-        Model.Questions.Add(new QuestionDto()
-            {
-                QuestionText = "very long question 2 I think and gess it will be",
-                Answers = new List<AnswerDto>()
-        {
-            new AnswerDto()
-            {
-                AnswerText = "a"
-            },
-            new AnswerDto()
-            {
-                AnswerText = "b"
-            },
-        }
-            });
-        Parent.Rerender();
     }
 }
