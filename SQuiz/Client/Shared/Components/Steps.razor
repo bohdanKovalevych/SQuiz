@@ -1,4 +1,5 @@
-﻿@implements IDisposable
+﻿@using SQuiz.Shared.Extensions
+@implements IDisposable
 
 <style>
     .my-line:last-of-type {
@@ -15,26 +16,22 @@
         @SubHeaderContent
         <div style="max-width: 100%; overflow-x: scroll">
             <div class="d-flex align-items-center list-group-horizontal">
-                @{
-                    var i = 0;
-                    foreach (var item in StepItems)
+                
+                @foreach (var (item, i) in StepItems.WithIndex())
+                {
+                    if (!item.ShowInNavigation)
                     {
-                        if (!item.ShowInNavigation)
-                        {
-                            continue;
-                        }
-                        var classes = item == ActiveStepItem ? "btn-outline-primary" : "btn-outline-secondary";
-                        
-                        <div class="list-group-item">
-                            <button style="border-radius: 20px" class="btn @classes" @onclick=@(() => ActivateStepItem(item))>@(i + 1)</button>
-                            <span class="small text-truncate">@item.Title</span>
-                            <div class="flex-grow-1 my-line" style="border: black 1px solid; border-radius: 3px; height: 5px; min-width: 10px; margin-right: 5px; margin-left: 5px"></div>
-                        </div>
-
-                        ++i;
+                        continue;
                     }
-
+                    var classes = item == ActiveStepItem ? "btn-outline-primary" : "btn-outline-secondary";
+                        
+                    <div class="list-group-item">
+                        <button style="border-radius: 20px" class="btn @classes" @onclick=@(() => ActivateStepItem(item))>@(i + 1)</button>
+                        <span class="small text-truncate">@item.Title</span>
+                        <div class="flex-grow-1 my-line" style="border: black 1px solid; border-radius: 3px; height: 5px; min-width: 10px; margin-right: 5px; margin-left: 5px"></div>
+                    </div>
                 }
+                
             </div>
         </div>
         
@@ -81,6 +78,18 @@
             ActiveStepItem = stepItem;
         }
         StepItems = StepItems.OrderBy(x => x.Order).ToList();
+        StateHasChanged();
+    }
+
+    public void RemoveByIndex(int index)
+    {
+        StepItems.RemoveAt(index);
+        
+        foreach(var step in StepItems)
+        {
+            step.Rerender();
+        }
+
         StateHasChanged();
     }
 

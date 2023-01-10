@@ -10,9 +10,17 @@ Quiz table
 }
 else
 {
+    @if (ShowModalToDelete)
+    {
+        <p>Are you sure you want to delete quiz with id @SelectedQuiz?.ShortId and name @SelectedQuiz?.Name ?</p>
+        <button @onclick="RemoveSelectedQuiz" class="btn btn-primary">Yes</button>
+        <button @onclick=@(() => {SelectedQuiz = null; ShowModalToDelete = false; StateHasChanged();}) class="btn btn-secondary">No</button>
+    }
+
     <table class="table table-striped table-bordered">
         <thead>
             <tr class="sticky-lg-top">
+                <th></th>
                 <th scope="col">Id</th>
                 <th scope="col">Name</th>
                 <th scope="col">Questions Count</th>
@@ -27,7 +35,11 @@ else
             @foreach(var item in Items) 
             {
                 <tr>
-                    <td scope="row">@item.ShortId</td>
+                    <td scope="row">
+                        <a class="oi oi-pencil" href="manage-quiz/@item.Id"></a>
+                        <button class="btn btn-danger oi oi-trash" @onclick=@(() => OpenModalToRemove(item))></button>
+                    </td>
+                    <td >@item.ShortId</td>
                     <td >@item.Name</td>
                     <td >@item.QuestionsCount</td>
                     <td >@item.IsPublic</td>
@@ -42,9 +54,33 @@ else
 
 @code {
     public List<QuizOptionDto>? Items { get; set; }
+    public bool ShowModalToDelete { get; set; }
+    public QuizOptionDto? SelectedQuiz { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         Items = await Http.GetFromJsonAsync<List<QuizOptionDto>>("Quizzes");
+    }
+
+    public void OpenModalToRemove(QuizOptionDto quiz)
+    {
+        ShowModalToDelete = true;
+        SelectedQuiz = quiz;
+        StateHasChanged();
+    }
+
+    public async Task RemoveSelectedQuiz()
+    {
+        if (SelectedQuiz != null)
+        {
+            var response = await Http.DeleteAsync($"Quizzes/{SelectedQuiz.Id}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                ShowModalToDelete = false;
+                Items?.Remove(SelectedQuiz);
+                SelectedQuiz = null;
+            }
+        }
     }
 }

@@ -4,6 +4,7 @@ namespace SQuiz.Shared.Dtos.Quiz
 {
     public class EditQuizDto
     {
+        public string? Id { get; set; }
         public string Name { get; set; }
 
         public string? Description { get; set; }
@@ -15,6 +16,7 @@ namespace SQuiz.Shared.Dtos.Quiz
 
     public class QuestionDto
     {
+        public string? Id { get; set; }
         public string QuestionText { get; set; }
         public int CorrectAnswerIndex { get; set; }
         public Question.ANSWERING_TIME AnsweringTime { get; set; }
@@ -25,6 +27,7 @@ namespace SQuiz.Shared.Dtos.Quiz
 
     public class AnswerDto
     {
+        public string? Id { get; set; }
         public string AnswerText { get; set; }
         public int Order { get; set; }
     }

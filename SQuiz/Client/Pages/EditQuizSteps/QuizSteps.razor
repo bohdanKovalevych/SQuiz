@@ -33,6 +33,11 @@
         Steps?.NavigateTo(index);
     }
 
+    public void RemoveByIndex(int index)
+    {
+        Steps?.RemoveByIndex(index);
+    }
+
     [Parameter]
     public EditQuizDto? InitialModel { get; set; }
     [Parameter]
@@ -43,24 +48,24 @@
     public Func<EditQuizDto, ValidationResult> ValidateHandler { get; set; }
 
     public ValidationResult? ValidationResult { get; set; }
-    
+
     public void Rerender() 
     {
         StateHasChanged();
     }
-    
+
     public async Task Save()
     {
         AfterSubmitErrorMessage = string.Empty;
         ValidationResult = ValidateHandler(Model);
-        
+
         if (ValidationResult != null && !ValidationResult.IsValid) 
         {
             return;
         }
 
         AfterSubmitErrorMessage = await SubmitHandler(Model);
-        
+
         if (string.IsNullOrEmpty(AfterSubmitErrorMessage))
         {
             NavigationManager.NavigateTo(NavigationManager.BaseUri, false);
@@ -71,6 +76,8 @@
     {
         if (InitialModel != null) 
         {
+            Model.Id = InitialModel.Id;
+            Model.Name = InitialModel.Name;
             Model.IsPublic = InitialModel.IsPublic;
             Model.Questions = InitialModel.Questions;
             Model.Description = InitialModel.Description;
