@@ -8,9 +8,7 @@ namespace SQuiz.Server.Application.Security.Authorization.Policies
     {
         public static void SetPolicySettings(AuthorizationOptions authOptions)
         {
-            authOptions.AddPolicy(Core.Policies.QuizPlayer, _ => { });
-
-            authOptions.AddPolicy(Core.Policies.QuizAuthor, builder => 
+            authOptions.AddPolicy(Core.Policies.QuizAuthor, builder =>
             {
                 builder.RequireAuthenticatedUser()
                 .AddRequirements(new QuizAuthorRequirement());
@@ -21,6 +19,6 @@ namespace SQuiz.Server.Application.Security.Authorization.Policies
                 builder.RequireAuthenticatedUser()
                 .AddRequirements(new QuizModeratorRequirement());
             });
-        } 
+        }
     }
 }

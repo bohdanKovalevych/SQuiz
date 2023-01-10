@@ -1,6 +1,8 @@
-﻿namespace SQuiz.Shared.Models
+﻿using SQuiz.Shared.Models.Interfaces;
+
+namespace SQuiz.Shared.Models
 {
-    public class Question
+    public class Question : IEntity
     {
         public string Id { get; set; }
         public string QuestionText { get; set; }

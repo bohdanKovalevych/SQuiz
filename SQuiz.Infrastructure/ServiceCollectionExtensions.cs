@@ -18,7 +18,7 @@ namespace SQuiz.Infrastructure
                 options.UseSqlServer(connectionString);
             });
             
-            services.AddTransient<ISQuizContext>(x => x.GetService<SQuizContext>());
+            services.AddScoped<ISQuizContext>(x => x.GetService<SQuizContext>());
             services.AddTransient<IModelService, ModelService>();
             
             return services;

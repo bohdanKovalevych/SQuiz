@@ -1,0 +1,16 @@
+﻿@if (WaitFor != null) 
+{
+    @ChildContent
+}
+else
+{
+    <span>Loading...</span>
+}
+
+@code {
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public object WaitFor { get; set; }
+}

@@ -25,7 +25,7 @@
         string? message = null;
         try {
             var result = await Http.PostAsJsonAsync("Quizzes", quiz);
-            message = await result.Content.ReadFromJsonAsync<string>();
+            message = await result.Content.ReadAsStringAsync();
         }
         catch (AccessTokenNotAvailableException exception)
         {

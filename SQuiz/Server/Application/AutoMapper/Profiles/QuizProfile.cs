@@ -12,14 +12,12 @@ namespace SQuiz.Server.Application.AutoMapper.Profiles
                 .ForMember(x => x.AuthorId, x => x.Ignore())
                 .ForMember(x => x.DateCreated, x => x.Ignore())
                 .ForMember(x => x.DateUpdated, x => x.Ignore())
-                .ForMember(x => x.Id, x => x.Ignore())
                 .ForMember(x => x.ShortId, x => x.Ignore())
                 .ReverseMap();
 
             CreateMap<Quiz, QuizDetailsDto>();
 
             CreateMap<QuestionDto, Question>()
-                .ForMember(x => x.Id, x => x.Ignore())
                 .ForMember(x => x.QuizId, x => x.Ignore())
                 .ForMember(x => x.CorrectAnswer, x => x.Ignore())
                 .ReverseMap();

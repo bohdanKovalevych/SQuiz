@@ -6,15 +6,12 @@
     <div>
         <div class="m-1" >
             <div class="list-group">
-                @for(var questionIndex = 0; questionIndex < Model.Questions.Count; ++questionIndex) 
+                @foreach (var (question, questionIndex) in Model.Questions.WithIndex()) 
                 {
-                    var question = Model.Questions[questionIndex];
                     <div class="list-group-item">
-                        
                         <div class="row">
                             <span class="small col-3">Question @(questionIndex + 1)</span>
                             <span class="small text-truncate col-3">@question.QuestionText</span>
-
                             <div class="col">
                                 <button class="btn btn-danger oi oi-trash float-end" @onclick=@(() => RemoveQuestion(question))></button>
                                 <button class="btn btn-outline-dark oi oi-pencil float-end" @onclick=@(() => NavigateToEditQuestion(question))></button>
@@ -37,6 +34,8 @@
 </StepItem>
 
 @code {
+    private const int QUESTION_START_INDEX = 2;
+
     [CascadingParameter]
     public QuizSteps Parent { get; set; }
 
@@ -55,15 +54,19 @@
 
     public void RemoveQuestion(QuestionDto question)
     {
-        Model.Questions.Remove(question);
-        Parent.Rerender();
+        var questionIndex = Model.Questions.IndexOf(question);
+        for(var i = questionIndex; i + 1 < Model.Questions.Count; ++i)
+        {
+            Model.Questions[i] = Model.Questions[i + 1];
+        }
+        Parent.RemoveByIndex(Model.Questions.Count - 1 + QUESTION_START_INDEX);
+        Model.Questions.RemoveAt(Model.Questions.Count - 1);
     }
 
     public void NavigateToEditQuestion(QuestionDto question) 
     {
-        var questionStartIndex = 2;
         var questionIndex = Model.Questions.IndexOf(question);
-        Parent.NavigateTo(questionIndex + questionStartIndex);
+        Parent.NavigateTo(questionIndex + QUESTION_START_INDEX);
     }
 
     public void MoveUp(QuestionDto question)
