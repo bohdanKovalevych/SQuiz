@@ -6,6 +6,6 @@
 
         public const string QuizModerator = nameof(QuizModerator);
 
-        public const string QuizPlayer = nameof(QuizPlayer);
+        public const string PlayerInGame = nameof(PlayerInGame);
     }
 }

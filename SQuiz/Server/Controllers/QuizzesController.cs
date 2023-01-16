@@ -103,11 +103,11 @@ namespace SQuiz.Server.Controllers
             var questionsToRemove = _quizService.GetQuestionsToRemove(quiz, model);
             var answersToRemove = _quizService.GetAnswersToRemove(quiz, model);
 
-            _quizContext.Questiones.UpdateRange(questionsToRemove);
+            _quizContext.Questions.UpdateRange(questionsToRemove);
             await _quizContext.SaveChangesAsync();
 
             _quizContext.Answers.RemoveRange(answersToRemove);
-            _quizContext.Questiones.RemoveRange(questionsToRemove);
+            _quizContext.Questions.RemoveRange(questionsToRemove);
             await _quizContext.SaveChangesAsync();
 
             foreach (var q in quiz.Questions)
@@ -187,7 +187,7 @@ namespace SQuiz.Server.Controllers
             await _quizContext.SaveChangesAsync();
 
             _quizContext.Answers.RemoveRange(answers);
-            _quizContext.Questiones.RemoveRange(questions);
+            _quizContext.Questions.RemoveRange(questions);
             _quizContext.Quizzes.Remove(quiz);
 
             await _quizContext.SaveChangesAsync();

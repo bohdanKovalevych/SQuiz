@@ -8,6 +8,11 @@ namespace SQuiz.Server.Application.Security.Authorization.Policies
     {
         public static void SetPolicySettings(AuthorizationOptions authOptions)
         {
+            authOptions.AddPolicy(Core.Policies.PlayerInGame, builder =>
+            {
+                builder.AddRequirements(new PlayerInGameRequirement());
+            });
+
             authOptions.AddPolicy(Core.Policies.QuizAuthor, builder =>
             {
                 builder.RequireAuthenticatedUser()

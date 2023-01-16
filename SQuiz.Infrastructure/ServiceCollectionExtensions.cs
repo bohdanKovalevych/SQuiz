@@ -14,7 +14,6 @@ namespace SQuiz.Infrastructure
             var connectionString = configuration.GetConnectionString("SQuizDb");
             services.AddDbContext<SQuizContext>((serviceProvider, options) =>
             {
-                options.EnableSensitiveDataLogging();
                 options.UseSqlServer(connectionString);
             });
             

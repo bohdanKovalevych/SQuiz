@@ -13,5 +13,7 @@ namespace SQuiz.Shared.Models
         public string QuestionId { get; set; }
 
         public Question Question { get; set; }
+
+        public ICollection<PlayerAnswer> PlayerAnswers { get; set; } = new List<PlayerAnswer>();
     }
 }
