@@ -51,14 +51,6 @@
 }
 
 @media (min-width: 641px) {
-    .collapse {
-        display: block;
-        width: 200px;
-        overflow-x: hidden;
-    }
-}
-
-@media (min-width: 900px) {
     .navbar-toggler {
         display: none;
     }

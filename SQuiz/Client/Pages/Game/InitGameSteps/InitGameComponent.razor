@@ -1,0 +1,110 @@
+﻿@using SQuiz.Client.Interfaces
+@using SQuiz.Client.Services
+@using SQuiz.Shared.Dtos.Game
+@using System.Net
+@inject IInitGameService InitGameService
+@inject PublicClient Http
+@inject NavigationManager Nav
+@inject ISessionStorageService SessionStorage
+
+@implements IDisposable
+
+<Steps Title="Play quiz" @ref="Steps">
+    <SubHeaderContent>
+        <p class="alert-danger">@ErrorMessage</p>
+    </SubHeaderContent>
+    <ChildContent>
+        <StepItem Title="Write code">
+            <ChooseGameByCodeStep></ChooseGameByCodeStep>
+        </StepItem>
+        @if (Game != null)
+        {
+            <StepItem Title="Write name">
+                <JoinGameStep Game="Game"></JoinGameStep>
+            </StepItem>
+        }
+    </ChildContent>
+</Steps>
+
+@code {
+    public Steps? Steps { get; set; }
+    public GameOptionDto? Game { get; set; }
+    public string? ErrorMessage;
+
+    protected override void OnInitialized()
+    {
+        InitGameService.PlayerNameChosen += PlayerNameChosen;
+        InitGameService.GameCodeChosen += GameCodeChosen;
+        InitGameService.JoinedWithExistingId += PlayerJoinedWithExistingId;
+    }
+
+    public async Task GameCodeChosen(int code)
+    {
+        ErrorMessage = null;
+        int navigateToIndex = 0;
+
+        try {
+            Game = await Http.Client.GetFromJsonAsync<GameOptionDto>($"Games/{code}");
+            navigateToIndex = 1;
+            await SessionStorage.SetItemAsync("game", Game);
+        }
+        catch (Exception)
+        {
+            ErrorMessage = $"Game was not found by code {code}";
+            Steps?.RemoveByIndex(1);
+            Game = null;
+            await SessionStorage.RemoveItemAsync("game");
+
+            return;
+        }
+        finally
+        {
+            StateHasChanged();
+            Steps?.NavigateTo(navigateToIndex);
+        }
+
+    }
+
+    public async Task PlayerNameChosen(string name)
+    {
+        var result = await Http.Client.PostAsJsonAsync("Games/join",
+            new JoinGameDto() { Name = name, ShortId = Game.ShortId });
+
+        if (!result.IsSuccessStatusCode)
+        {
+            ErrorMessage = await result.Content.ReadAsStringAsync();
+            StateHasChanged();
+            return;
+        }
+        Nav.NavigateTo("play/showGame");
+
+    }
+
+    public async Task PlayerJoinedWithExistingId(string id)
+    {
+        var result = await Http.Client.PostAsJsonAsync("Games/rejoin", id);
+
+        if (result.StatusCode == HttpStatusCode.NotFound)
+        {
+            ErrorMessage = "User or game was not found";
+            StateHasChanged();
+            return;
+        }
+
+        if (!result.IsSuccessStatusCode)
+        {
+            ErrorMessage = await result.Content.ReadAsStringAsync();
+            StateHasChanged();
+            return;
+        }
+
+        Nav.NavigateTo("play/showGame");
+    }
+
+    public void Dispose()
+    {
+        InitGameService.PlayerNameChosen -= PlayerNameChosen;
+        InitGameService.GameCodeChosen -= GameCodeChosen;
+        InitGameService.JoinedWithExistingId -= PlayerJoinedWithExistingId;
+    }
+}

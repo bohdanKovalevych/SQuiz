@@ -7,8 +7,14 @@ namespace SQuiz.Infrastructure.Interfaces
     public interface ISQuizContext
     {
         DbSet<Quiz> Quizzes { get; set; }
-        DbSet<Question> Questiones { get; set; }
+        DbSet<Question> Questions { get; set; }
         DbSet<Answer> Answers { get; set; }
+        DbSet<Moderator> Moderators { get; set; }
+        DbSet<QuizModerator> QuizModerators { get; set; }
+        DbSet<QuizGame> QuizGames { get; set; }
+        DbSet<Player> Players { get; set; }
+        DbSet<PlayerAnswer> PlayerAnswers { get; set; }
+
         EntityEntry<TEntity> Entry<TEntity>(TEntity entity)
             where TEntity : class;
         EntityEntry<TEntity> Add<TEntity>(TEntity entity)

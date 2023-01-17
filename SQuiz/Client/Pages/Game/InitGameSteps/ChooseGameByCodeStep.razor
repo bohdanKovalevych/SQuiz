@@ -1,0 +1,29 @@
+﻿@using SQuiz.Client.Interfaces
+@inject NavigationManager Nav
+@inject IInitGameService InitGameService
+
+<div class="h-100 m-auto">
+    <div class="row">
+        <div class="col-2">
+            <span class="fs-5">Code</span>
+        </div>
+        <div class="col">
+            <input class="form-control-lg" type="number" @bind-value="shortId"/>
+        </div>
+        <div class="col-3">
+            <button class="btn btn-lg btn-primary" @onclick="PlayQuiz">Play Quiz</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    public int? shortId;
+    
+    public async Task PlayQuiz()
+    {
+        if (shortId is int notNullShortId)
+        {
+            await InitGameService.ChooseGameCode(notNullShortId);
+        }
+    }
+}

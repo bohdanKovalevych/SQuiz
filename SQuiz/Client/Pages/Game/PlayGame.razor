@@ -1,0 +1,105 @@
+﻿@page "/play"
+@layout PlayerLayout
+@using SQuiz.Client.Interfaces
+@using SQuiz.Client.Services
+@using SQuiz.Shared.Dtos.Game
+@using SQuiz.Shared.Extensions
+@using System.Net
+
+@implements IDisposable
+@inject ICookieStoreService CookieStoreService
+@inject ISessionStorageService SessionStorage
+@inject PublicClient Http
+@inject NavigationManager Nav
+@inject IPlayGameService PlayGameService
+
+<LoadingWrapper WaitFor="Question">
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <progress max="@MaxTime" value="@ElapsedTime" For></progress>
+                <div>
+                    @ElapsedTime.ToString("N1") seconds left
+                </div>
+                <div>
+                    @(Question?.Order + 1). @Question?.QuestionText
+                </div>
+            </div>
+            <div class="card-body">
+                @foreach (var (answer, index) in Question?.Answers.WithIndex() 
+                    ?? new List<GameAnswerDto>().WithIndex())
+                {
+                    <div class="m-3 p-5 btn btn-info" @onclick=@(() => SendAnswer(answer))>
+                        @(index + 1). @answer.AnswerText
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</LoadingWrapper>
+
+@code {
+    public GameQuestionDto? Question;
+    public double ElapsedTime;
+    public double MaxTime;
+
+    public async Task GetQuestion()
+    {
+        Question = null;
+        StateHasChanged();
+        var response = await Http.Client.GetAsync("Games/questions");
+
+        if (response.StatusCode == HttpStatusCode.NoContent)
+        {
+            Nav.NavigateTo("/gameScores");
+            return;
+        }
+
+        Question = await response.Content.ReadFromJsonAsync<GameQuestionDto>();
+
+        PlayGameService.InitQuestionAndStartTimer(Question);
+        MaxTime = PlayGameService.CurrentMaxTime;
+        StateHasChanged();
+    }
+
+
+    public async Task SendAnswer(GameAnswerDto answer)
+    {
+        await PlayGameService.SendAnswer(answer.Id);
+        await GetQuestion();
+    }
+
+    public void OnTimeChanged(double time)
+    {
+        ElapsedTime = time;
+        StateHasChanged();
+    }
+
+    public async Task OnTimeEnd()
+    {
+        ElapsedTime = 0.0;
+        StateHasChanged();
+        await GetQuestion();
+    }
+
+    public async Task OnAnswered(SendAnswerDto model)
+    {
+        await Http.Client.PostAsJsonAsync("Games/answers", model);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PlayGameService.OnTimeChanged += OnTimeChanged;
+        PlayGameService.OnTimeEnd += OnTimeEnd;
+        PlayGameService.OnAnswered += OnAnswered;
+        
+        await GetQuestion();
+    }
+
+    public void Dispose()
+    {
+        PlayGameService.OnTimeChanged -= OnTimeChanged;
+        PlayGameService.OnTimeEnd -= OnTimeEnd;
+        PlayGameService.OnAnswered -= OnAnswered;
+    }
+}

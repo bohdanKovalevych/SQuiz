@@ -1,0 +1,122 @@
+﻿@using SQuiz.Shared.Dtos.Game
+@using SQuiz.Shared.Dtos.Quiz
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<div class="col-md-6 card">
+    <div class="card-header">
+        @if (GameOption != null)
+        {
+            <p>Edit game with id @GameOption.ShortId</p>
+        }
+        else
+        {
+            <p>Start a new game</p>
+        }
+        
+    </div>
+    <div class="card-body">
+        <p class="text-danger">@ErrorMessage</p>
+        <div class="input-group m-1">
+            <label class="m-1 form-label col-3">Choose quiz</label>
+            <select class="form-select" @bind=@Model.QuizId>
+                @foreach (var quiz in QuizOptions)
+                {
+                    <option value="@quiz.Id">@quiz.Name</option>
+                }
+            </select>
+        </div>
+        <div class="input-group m-1">
+            <label class="m-1 form-label col-3">Start Date</label>
+            <input class="form-control" type="date" @bind-value="Model.StartDate" />
+            <input class="form-control" type="time" @bind-value="StartTime" />
+        </div>
+        <div class="input-group m-1">
+            <label class="m-1 form-label col-3">End Date</label>
+            <input class="form-control" type="date" @bind-value="Model.EndDate" />
+            <input class="form-control" type="time" @bind-value="EndTime" />
+        </div>
+        <div class="m-1">
+            <button class="btn btn-primary" @onclick="StartGame">
+                @(GameOption != null
+                    ? "Edit"
+                    : "Start")
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public List<QuizOptionDto> QuizOptions { get; set; } = new List<QuizOptionDto>();
+
+    [Parameter]
+    public GameOptionDto? GameOption { get; set; }
+
+    [Parameter]
+    public EventCallback OnSubmitted { get; set; }
+
+    public string? ErrorMessage;
+
+    public StartGameDto Model { get; set; } = new StartGameDto() 
+    {
+        StartDate = DateTime.Now,
+        EndDate = DateTime.Now.AddDays(1)
+    };
+
+    public DateTimeOffset? StartTime = DateTimeOffset.Now.AddSeconds(0).AddMilliseconds(0);
+    public DateTimeOffset? EndTime = DateTimeOffset.Now.AddSeconds(0).AddMilliseconds(0);
+
+    public async Task StartGame()
+    {
+        ErrorMessage = null;
+
+        if (Model.QuizId == null)
+        {
+            ErrorMessage = "Quiz is required";
+            return;
+        }
+
+        Model.StartDate = AddTimeToDate(Model.StartDate, StartTime);
+        Model.EndDate = AddTimeToDate(Model.EndDate, EndTime);
+
+        var response = await Http.PutAsJsonAsync($"ManageGames/{Model.QuizId}", Model);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await OnSubmitted.InvokeAsync();
+        }
+    }
+
+    private DateTimeOffset? AddTimeToDate(DateTimeOffset? date, DateTimeOffset? time)
+    {
+        if (time is DateTimeOffset notNullTime)
+        {
+            return date?
+                .AddHours(notNullTime.Hour)
+                .AddMinutes(notNullTime.Minute)
+                .AddSeconds(0)
+                .AddMilliseconds(0);
+        }
+
+        return null;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (QuizOptions != null && QuizOptions.Any())
+        {
+            Model.QuizId = QuizOptions[0].Id;
+        }
+        
+        if(GameOption != null)
+        {
+            Model.QuizId = GameOption.QuizId;
+            Model.Id = GameOption.Id;
+            Model.EndDate = GameOption.EndDate;
+            Model.StartDate = GameOption.StartDate;
+            StartTime = GameOption.StartDate;
+            EndTime = GameOption.EndDate;
+        }
+    }
+}

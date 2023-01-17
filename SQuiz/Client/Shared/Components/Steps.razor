@@ -84,11 +84,6 @@
     public void RemoveByIndex(int index)
     {
         StepItems.RemoveAt(index);
-        
-        foreach(var step in StepItems)
-        {
-            step.Rerender();
-        }
 
         StateHasChanged();
     }

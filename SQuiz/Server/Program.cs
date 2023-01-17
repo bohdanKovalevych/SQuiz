@@ -24,6 +24,8 @@ builder.Services.AddShared();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<IAuthorizationHandler, QuizAuthorRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, QuizModeratorRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, PlayerInGameRequirementHandler>();
 builder.Services.AddScoped<IQuizService, QuizService>();
 
 var app = builder.Build();

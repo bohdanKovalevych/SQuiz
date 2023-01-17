@@ -2,8 +2,12 @@
 
 @using FluentValidation
 @using FluentValidation.Results
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using SQuiz.Shared.Dtos.Quiz
+
+@attribute [Authorize]
+
 @inject IValidator<EditQuizDto> Validator
 @inject HttpClient Http
 @inject NavigationManager Nav

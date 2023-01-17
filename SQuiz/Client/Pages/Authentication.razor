@@ -1,7 +1,19 @@
 ﻿@page "/authentication/{action}"
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
-<RemoteAuthenticatorView Action="@Action" />
+@inject HttpClient Http
+
+<RemoteAuthenticatorView Action="@Action" OnLogInSucceeded="OnLogInSucceeded" />
 
 @code{
     [Parameter] public string? Action { get; set; }
+    public bool runOnce = false;
+    
+    public async Task OnLogInSucceeded()
+    {
+        if (!runOnce)
+        {
+            runOnce = true;
+            await Http.PostAsJsonAsync("Auth", "login-callback");
+        }
+    }
 }

@@ -1,0 +1,53 @@
+﻿@page "/gameScores"
+@layout PlayerLayout
+
+@using SQuiz.Client.Interfaces
+@using SQuiz.Client.Services
+@using SQuiz.Shared.Dtos.Game
+@using SQuiz.Shared.Extensions
+@using System.Net
+
+@inject ICookieStoreService CookieStoreService
+@inject ISessionStorageService SessionStorage
+@inject PublicClient Http
+@inject NavigationManager Nav
+
+<div class="alert-danger">@ErrorMessage</div>
+
+<LoadingWrapper WaitFor="Scores">
+    Final scores are:
+    <ol>
+        @foreach (var player in Scores)
+        {
+            <li>@player.Name @player.Points</li>
+        }
+    </ol>
+    <a class="btn btn-secondary" href="/">Back to main</a>
+</LoadingWrapper>
+
+@code {
+    public string? PlayerId { get; set; }
+    public List<PlayerDto>? Scores { get; set; }
+
+    public string? ErrorMessage { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PlayerId = (await CookieStoreService.GetAsync("playerId"))?.Value;
+        
+        if (PlayerId == null)
+        {
+            Nav.NavigateTo(Nav.BaseUri);
+            return;
+        }
+
+        var response = await Http.Client.GetAsync($"Games/scores/{PlayerId}");
+        if (!response.IsSuccessStatusCode)
+        {
+            ErrorMessage = await response.Content.ReadAsStringAsync();
+            return;
+        }
+
+        Scores = await response.Content.ReadFromJsonAsync<List<PlayerDto>>();
+    }
+}
