@@ -8,7 +8,7 @@
         <button class="btn btn-secondary m-1" @onclick="BackToManageQuestions">Manage Questions</button>
         <ValidationErrorMessage Model="Model" For=@($"Questions[{QuestionIndex}].QuestionText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
         <div class="input-group m-1">
-            <label class="form-control">Question Text</label>
+            <label class="form-control">Question Text *</label>
             <input class="form-control w-50" @bind-value="Question.QuestionText" />
         </div>
         <div class="input-group m-1">
@@ -33,7 +33,7 @@
             <tr>
                 <th>Name</th>
                 <th>Value</th>
-                <th>@(Question.CorrectAnswerIndex + 1) Is Correct</th>
+                <th>@((char)('a' + Question.CorrectAnswerIndex)) Is Correct</th>
             </tr>
             @for (var answerIndex = 0; answerIndex < Question.Answers.Count; ++answerIndex)
             {
@@ -44,7 +44,7 @@
                     <td colspan="2">
                         <ValidationErrorMessage Model="Model" For=@($"Questions[{QuestionIndex}].Answers[{answerIndex}].AnswerText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
                         <div class="input-group m-1">
-                            <label class="form-control">Answer @(answerIndex + 1) @(isRequired ? "*" : "")</label>
+                            <label class="form-control">@((char) ('a' + answerIndex)) @(isRequired ? "*" : "")</label>
                             <input class="form-control w-50" @bind-value="answer.AnswerText" />
                         </div>
                     </td>
@@ -116,12 +116,34 @@
     public void MoveDown(AnswerDto answer) 
     {
         var currentIndex = Question.Answers.IndexOf(answer);
-        Question.Answers.Swap(currentIndex, currentIndex + 1);
+        var downIndex = currentIndex + 1;
+
+        if (Question.CorrectAnswerIndex == currentIndex)
+        {
+            Question.CorrectAnswerIndex = downIndex;
+        }
+        else if (Question.CorrectAnswerIndex == downIndex)
+        {
+            Question.CorrectAnswerIndex = currentIndex;
+        }
+
+        Question.Answers.Swap(currentIndex, downIndex);
     }
 
     public void MoveUp(AnswerDto answer)
     {
         var currentIndex = Question.Answers.IndexOf(answer);
-        Question.Answers.Swap(currentIndex, currentIndex - 1);
+        var upIndex = currentIndex - 1;
+        
+        if (Question.CorrectAnswerIndex == currentIndex)
+        {
+            Question.CorrectAnswerIndex = upIndex;
+        }
+        else if (Question.CorrectAnswerIndex == upIndex)
+        {
+            Question.CorrectAnswerIndex = currentIndex;
+        }
+
+        Question.Answers.Swap(currentIndex, upIndex);
     }
 }

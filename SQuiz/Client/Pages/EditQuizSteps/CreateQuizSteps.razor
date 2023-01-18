@@ -12,11 +12,13 @@
 @inject HttpClient Http
 @inject NavigationManager Nav
 
-<QuizSteps Mode="QuizSteps.MODE.CREATE" 
-    ValidateHandler="Validate"
-    SubmitHandler="CreateNewQuiz">
+<div class="container">
+    <QuizSteps Mode="QuizSteps.MODE.CREATE"
+               ValidateHandler="Validate"
+               SubmitHandler="CreateNewQuiz">
 
-</QuizSteps>
+    </QuizSteps>
+</div>
 
 @code {
     public ValidationResult Validate(EditQuizDto quiz) 

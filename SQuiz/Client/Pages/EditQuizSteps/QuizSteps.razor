@@ -56,8 +56,10 @@
 
     public async Task Save()
     {
-        AfterSubmitErrorMessage = string.Empty;
         ValidationResult = ValidateHandler(Model);
+        AfterSubmitErrorMessage = ValidationResult.IsValid
+            ? string.Empty
+            : "There are some validation errors";
 
         if (ValidationResult != null && !ValidationResult.IsValid) 
         {

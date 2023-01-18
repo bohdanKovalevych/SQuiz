@@ -1,5 +1,6 @@
 ﻿@using SQuiz.Client.Shared.Components
 @using SQuiz.Shared.Dtos.Quiz
+@using SQuiz.Shared.Extensions
 
 <StepItem Title="Review details" Order=@(Model.Questions.Count + 3)>
     <div class="container">
@@ -35,26 +36,28 @@
                 </div>
             </div>
 
-            @foreach(var q in Model.Questions)
+            @foreach(var (q, i) in Model.Questions.WithIndex())
             {
-                var i = Model.Questions.IndexOf(q);
                 <div class="list-group-item">
                     <div class="row">
-                        <div class="col-12">
-                            <span class="small">@(i + 1). </span>
-                            <span>@q.QuestionText</span>
+                        <ValidationErrorMessage Model="Model" For=@($"Questions[{i}].QuestionText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
+                        <div class="col-12 m-1">
+                            <span class="alert alert-info">
+                                <span class="small">@(i + 1). </span>
+                                <span>@q.QuestionText</span>
+                            </span>
                         </div>
 
-                        @foreach (var a in q.Answers)
+                        @foreach (var (a, j) in q.Answers.WithIndex())
                         {
-                            var j = q.Answers.IndexOf(a);
-                            <div class="col-12">
-                                <span class="small">Variant @(j + 1).</span>
-                                @if (j == q.CorrectAnswerIndex)
-                                {
-                                    <span class="small">(Is correct)</span>
-                                }
-                                <span>@a.AnswerText</span>
+                            <div class="m-3">
+                                <ValidationErrorMessage Model="Model" For=@($"Questions[{i}].Answers[{j}].AnswerText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
+                            </div>
+                            <div class="col-12 m-3">
+                                <span class="alert @(j == q.CorrectAnswerIndex ? "alert-success" : "alert-secondary")">
+                                    <span class="small">@((char)('a' + j)).</span>
+                                    <span>@a.AnswerText</span>
+                                </span>
                             </div>
                         }
                     </div>
