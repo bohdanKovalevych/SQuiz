@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using SQuiz.Shared.Models;
 
-namespace SQuiz.Infrastructure.Interfaces
+namespace SQuiz.Application.Interfaces
 {
     public interface ISQuizContext
     {

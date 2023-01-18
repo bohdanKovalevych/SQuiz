@@ -2,7 +2,7 @@
 using SQuiz.Shared.Models;
 using SQuiz.Shared.Models.Interfaces;
 
-namespace SQuiz.Server.Interfaces
+namespace SQuiz.Application.Interfaces
 {
     public interface IQuizService
     {

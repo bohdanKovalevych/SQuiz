@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SQuiz.Application.Interfaces;
 using SQuiz.Identity.Models;
-using SQuiz.Infrastructure.Interfaces;
 using SQuiz.Shared.Models;
 using System.Security.Claims;
 
@@ -29,7 +28,7 @@ namespace SQuiz.Server.Controllers
         {
             var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var user = await _userManager.FindByIdAsync(id);
-            
+
             if (user == null)
             {
                 user = new SQuizUser()

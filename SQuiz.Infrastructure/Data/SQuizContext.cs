@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using SQuiz.Application.Interfaces;
 using SQuiz.Infrastructure.Interfaces;
 using SQuiz.Shared.Models;
 
@@ -20,13 +21,13 @@ namespace SQuiz.Infrastructure.Data
             _modelService.AddContentItemShortIdSequences(modelBuilder);
         }
 
-        public DbSet<Quiz> Quizzes { get; set; }
-        public DbSet<Question> Questions { get; set; }
-        public DbSet<Answer> Answers { get; set; }
-        public DbSet<Moderator> Moderators { get; set; }
-        public DbSet<QuizModerator> QuizModerators { get; set; }
-        public DbSet<QuizGame> QuizGames { get; set; }
-        public DbSet<Player> Players { get; set; }
-        public DbSet<PlayerAnswer> PlayerAnswers { get; set; }
+        public virtual DbSet<Quiz> Quizzes { get; set; }
+        public virtual DbSet<Question> Questions { get; set; }
+        public virtual DbSet<Answer> Answers { get; set; }
+        public virtual DbSet<Moderator> Moderators { get; set; }
+        public virtual DbSet<QuizModerator> QuizModerators { get; set; }
+        public virtual DbSet<QuizGame> QuizGames { get; set; }
+        public virtual DbSet<Player> Players { get; set; }
+        public virtual DbSet<PlayerAnswer> PlayerAnswers { get; set; }
     }
 }

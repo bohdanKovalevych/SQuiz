@@ -1,10 +1,10 @@
-﻿using SQuiz.Server.Interfaces;
+﻿using SQuiz.Application.Interfaces;
 using SQuiz.Shared.Dtos.Quiz;
 using SQuiz.Shared.Extensions;
 using SQuiz.Shared.Models;
 using SQuiz.Shared.Models.Interfaces;
 
-namespace SQuiz.Server.Services
+namespace SQuiz.Application.Services
 {
     public class QuizService : IQuizService
     {
@@ -19,11 +19,11 @@ namespace SQuiz.Server.Services
                     question.Id = Guid.NewGuid().ToString();
                     add(question);
                 }
-                else 
+                else
                 {
                     update(question);
                 }
-                
+
                 foreach (var answer in question.Answers)
                 {
                     answer.QuestionId = question.Id;
@@ -112,8 +112,8 @@ namespace SQuiz.Server.Services
 
             var result = quiz.Questions
                 .Where(x => !existingQuestions.Contains(x.Id));
-            
-            foreach(var question in result)
+
+            foreach (var question in result)
             {
                 question.CorrectAnswerId = null;
             }

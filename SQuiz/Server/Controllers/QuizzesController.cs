@@ -2,8 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SQuiz.Infrastructure.Interfaces;
-using SQuiz.Server.Interfaces;
+using SQuiz.Application.Interfaces;
 using SQuiz.Shared;
 using SQuiz.Shared.Dtos.Quiz;
 using SQuiz.Shared.Extensions;

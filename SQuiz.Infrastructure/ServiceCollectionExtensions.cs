@@ -4,6 +4,7 @@ using SQuiz.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using SQuiz.Infrastructure.Interfaces;
 using SQuiz.Infrastructure.Services;
+using SQuiz.Application.Interfaces;
 
 namespace SQuiz.Infrastructure
 {

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using SQuiz.Infrastructure.Interfaces;
+using SQuiz.Application.Interfaces;
 using System.Security.Claims;
 
 namespace SQuiz.Server.Application.Security.Authorization.Requirements

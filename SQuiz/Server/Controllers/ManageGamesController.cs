@@ -1,18 +1,11 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SQuiz.Infrastructure.Interfaces;
-using SQuiz.Shared.Dtos.Game;
+using SQuiz.Application.Interfaces;
 using SQuiz.Shared;
-using SQuiz.Shared.Interfaces;
+using SQuiz.Shared.Dtos.Game;
 using SQuiz.Shared.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SQuiz.Server.Controllers
 {

@@ -1,10 +1,9 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SQuiz.Infrastructure.Interfaces;
+using SQuiz.Application.Interfaces;
 using SQuiz.Shared;
 using SQuiz.Shared.Dtos.Game;
 using SQuiz.Shared.Interfaces;

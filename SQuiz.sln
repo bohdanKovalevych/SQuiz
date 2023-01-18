@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQuiz.Shared", "SQuiz\Share
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQuiz.Infrastructure", "SQuiz.Infrastructure\SQuiz.Infrastructure.csproj", "{BB1DE653-001E-413B-85C1-02B059BF3FAB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQuiz.Identity", "SQuiz.Identity\SQuiz.Identity.csproj", "{980F1B64-E54B-4A8E-ABDE-2F75722EED25}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQuiz.Identity", "SQuiz.Identity\SQuiz.Identity.csproj", "{980F1B64-E54B-4A8E-ABDE-2F75722EED25}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQuiz.Application", "SQuiz.Application\SQuiz.Application.csproj", "{5FE943A5-D83F-4529-BDEB-E3D2EEF18122}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{980F1B64-E54B-4A8E-ABDE-2F75722EED25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{980F1B64-E54B-4A8E-ABDE-2F75722EED25}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{980F1B64-E54B-4A8E-ABDE-2F75722EED25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FE943A5-D83F-4529-BDEB-E3D2EEF18122}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FE943A5-D83F-4529-BDEB-E3D2EEF18122}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FE943A5-D83F-4529-BDEB-E3D2EEF18122}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FE943A5-D83F-4529-BDEB-E3D2EEF18122}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

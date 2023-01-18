@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web;
+using SQuiz.Application;
+using SQuiz.Application.Interfaces;
+using SQuiz.Application.Services;
 using SQuiz.Identity;
 using SQuiz.Infrastructure;
 using SQuiz.Server.Application.Security.Authorization.Policies;
 using SQuiz.Server.Application.Security.Authorization.Requirements;
-using SQuiz.Server.Interfaces;
-using SQuiz.Server.Services;
 using SQuiz.Shared;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddIdentityByConfiguration(builder.Configuration);
+builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddShared();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
