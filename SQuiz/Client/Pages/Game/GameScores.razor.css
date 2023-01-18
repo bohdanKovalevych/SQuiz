@@ -1,0 +1,8 @@
+﻿.game-scores-container {
+    height: 99vh;
+    display: flex;
+    flex-direction: column;
+    align-content: space-around;
+    justify-content: center;
+    flex-wrap: wrap;
+}

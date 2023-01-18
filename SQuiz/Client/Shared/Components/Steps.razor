@@ -2,21 +2,33 @@
 @implements IDisposable
 
 <style>
+    .my-line {
+        border: black 1px solid;
+        border-radius: 3px;
+        height: 5px;
+        min-width: 30px;
+        margin-right: 5px;
+        margin-left: 5px;
+    }
+
     .my-line:last-of-type {
         display: none;
+    }
+
+    .header-steps {
+        max-width: 875px;
+        padding: 30px;
+        overflow-x: auto;
     }
 </style>
 
 <div class="card">
     <div class="card-header">
-        <button class="btn btn-close float-end"></button>
         <p>
             <h3>@Title</h3>
         </p>
         @SubHeaderContent
-        <div style="max-width: 100%; overflow-x: scroll">
-            <div class="d-flex align-items-center list-group-horizontal">
-                
+        <div class="d-flex align-items-center header-steps">
                 @foreach (var (item, i) in StepItems.WithIndex())
                 {
                     if (!item.ShowInNavigation)
@@ -25,14 +37,13 @@
                     }
                     var classes = item == ActiveStepItem ? "btn-outline-primary" : "btn-outline-secondary";
                         
-                    <div class="list-group-item">
-                        <button style="border-radius: 20px" class="btn @classes" @onclick=@(() => ActivateStepItem(item))>@(i + 1)</button>
+                    <button style="border-radius: 20px" class="btn @classes" @onclick=@(() => ActivateStepItem(item))>
+                        @(i + 1)
                         <span class="small text-truncate">@item.Title</span>
-                        <div class="flex-grow-1 my-line" style="border: black 1px solid; border-radius: 3px; height: 5px; min-width: 10px; margin-right: 5px; margin-left: 5px"></div>
-                    </div>
+                        <span class="app-tooltip">@item.Title</span>
+                    </button>
+                    <span class="my-line"></span>
                 }
-                
-            </div>
         </div>
         
     </div>

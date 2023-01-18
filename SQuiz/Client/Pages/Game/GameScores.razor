@@ -13,17 +13,18 @@
 @inject NavigationManager Nav
 
 <div class="alert-danger">@ErrorMessage</div>
-
-<LoadingWrapper WaitFor="Scores">
-    Final scores are:
-    <ol>
-        @foreach (var player in Scores)
-        {
-            <li>@player.Name @player.Points</li>
-        }
-    </ol>
-    <a class="btn btn-secondary" href="/">Back to main</a>
-</LoadingWrapper>
+<div class="container game-scores-container">
+    <LoadingWrapper WaitFor="Scores">
+        Final scores are:
+        <ol>
+            @foreach (var player in Scores)
+            {
+                <li>@player.Name @player.Points</li>
+            }
+        </ol>
+        <a class="btn btn-secondary" href="/">Back to main</a>
+    </LoadingWrapper>
+</div>
 
 @code {
     public string? PlayerId { get; set; }
