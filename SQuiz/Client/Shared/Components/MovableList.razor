@@ -1,0 +1,188 @@
+﻿@using MudBlazor.Utilities
+@using SQuiz.Shared.Extensions
+@using SQuiz.Shared.Models.Interfaces
+
+@*Constraints for component does not work for IHasOrder from another assembly*@
+@typeparam TItem
+
+<MudDropContainer T="TItem"
+                  Items="@Items"
+                  ItemDropped="OnDrop"
+                  @ref="_dropContainer"
+                  ItemsSelector=@((_, _) => true)>
+    <ChildContent>
+        <MudPaper>
+            <MudList Class="mt-1"
+                Clickable="Clickable">
+                <MudListSubheader>
+                    <MudMenu 
+                        Label="@Header" 
+                        EndIcon="@Icons.Material.Filled.MoreVert">
+                        <MudMenuItem @onclick="AddItem">Add</MudMenuItem>
+                    </MudMenu>
+                </MudListSubheader>
+                <MudDropZone T="TItem" Identifier="_" AllowReorder />
+            </MudList>
+        </MudPaper>
+    </ChildContent>
+    <ItemRenderer>
+        <MudListItem Value="@context" @onclick=@(() => SelectedValue = context)>
+            <MudPaper Class="d-flex flex-row gap-1 justify-space-between" >
+                <div class="cursor-default">
+                    @ItemTemplate?.Invoke(context)
+                </div>
+                <div>
+                    <MudMenu EndIcon="@Icons.Material.Filled.MoreVert">
+                        @MenuActions?.Invoke(context)
+                        <MudMenuItem Icon="@Icons.Material.Filled.Delete"
+                                     IconColor="Color.Error"
+                                     @onclick=@(() => RemoveItem(context))>Delete</MudMenuItem>
+
+                        @if (((IHasOrder)context).Order > 0)
+                        {
+                            <MudMenuItem Icon="@Icons.Material.Filled.ArrowUpward"
+                                     @onclick=@(() => MoveUp(context))>Move Up</MudMenuItem>
+                        }
+
+                        @if (((IHasOrder)context).Order + 1 != Items.Count)
+                        {
+                            <MudMenuItem Icon="@Icons.Material.Filled.ArrowDownward"
+                                     @onclick=@(() => MoveDown(context))>Move Down</MudMenuItem>
+                        }
+                    </MudMenu>
+                </div>
+            </MudPaper>
+        </MudListItem>
+    </ItemRenderer>
+</MudDropContainer>
+
+@code {
+    [Parameter]
+    public bool Clickable { get; set; } = false;
+
+    TItem? _selectedValue;
+
+    [Parameter]
+    public TItem? SelectedValue 
+    { 
+        get => _selectedValue;
+        set
+        {
+            if (!_selectedValue?.Equals(value)
+            ?? !value?.Equals(_selectedValue)
+            ?? false)
+            {
+                _selectedValue = value;
+                SelectedValueChanged.InvokeAsync(value);
+            }
+        }
+    }
+
+    [Parameter]
+    public EventCallback<TItem> SelectedValueChanged { get; set; }
+
+    [Parameter]
+    public List<TItem> Items { get; set; }
+
+    [Parameter]
+    public Func<TItem> AddItemDelegate { get; set; }
+
+    [Parameter]
+    public string? Header { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem>? ItemTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem>? MenuActions { get; set; }
+
+    [Parameter]
+    public EventCallback<TItem>? OnRemove { get; set; }
+
+    [Parameter]
+    public EventCallback<TItem>? OnAdd { get; set; }
+
+    [Parameter]
+    public EventCallback<MudItemDropInfo<TItem>>? OnReorder { get; set; }
+
+    private MudDropContainer<TItem>? _dropContainer;
+
+    private async Task AddItem()
+    {
+        var newItem = AddItemDelegate();
+        Items.Add(newItem);
+        _dropContainer?.Refresh();
+
+        if (OnAdd.HasValue)
+        {
+            await OnAdd.Value.InvokeAsync(newItem);
+        }
+    }
+
+    private async Task RemoveItem(TItem item)
+    {
+        var temIndex = Items.IndexOf(item);
+        for (var i = temIndex; i + 1 < Items.Count; ++i)
+        {
+            Items[i] = Items[i + 1];
+            ((IHasOrder)Items[i]).Order = i;
+        }
+        Items.RemoveAt(Items.Count - 1);
+        _dropContainer?.Refresh();
+
+        if (OnRemove.HasValue)
+        {
+            await OnRemove.Value.InvokeAsync(item);
+        }
+    }
+
+    private async Task MoveUp(TItem item)
+    {
+        var index = Items.IndexOf(item);
+        var indexUp = index - 1;
+
+        Items.Swap(index, indexUp);
+
+        var dropInfo = new MudItemDropInfo<TItem>(item, "_", index - 1);
+        
+        if (OnReorder.HasValue)
+        {
+            await OnReorder.Value.InvokeAsync(dropInfo);
+        }
+
+        Items.UpdateOrder(dropInfo, x => ((IHasOrder)x).Order);
+        _dropContainer?.Refresh();
+    }
+
+    private async Task MoveDown(TItem item)
+    {
+        var index = Items.IndexOf(item);
+        var indexDown = index + 1;
+        Items.Swap(index, indexDown);
+
+        var dropInfo = new MudItemDropInfo<TItem>(item, "_", index + 1);
+        
+        if (OnReorder.HasValue)
+        {
+            await OnReorder.Value.InvokeAsync(dropInfo);
+        }
+
+        Items.UpdateOrder(dropInfo, x => ((IHasOrder)x).Order);
+        _dropContainer?.Refresh();
+    }
+
+    private async Task OnDrop(MudItemDropInfo<TItem> info)
+    {
+        var oldIndex = ((IHasOrder)info.Item).Order;
+        
+        if (OnReorder.HasValue)
+        {
+            await OnReorder.Value.InvokeAsync(info);
+        }
+        
+        Items.UpdateOrder(info, x => ((IHasOrder)x).Order);
+        Items.Swap(info.IndexInZone, oldIndex);
+
+        StateHasChanged();
+    }
+}

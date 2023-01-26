@@ -1,0 +1,70 @@
+﻿@using SQuiz.Client.Pages.ManageQuizes
+<style>
+    .parallax {
+        position: relative;
+        width: 100%;
+        background-color: blueviolet;
+        background-image: url("images/squiz-bg.png");
+        min-height: 180px;
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position: center;
+    }
+
+        .parallax::after {
+            content: "";
+            left: 0;
+            top: 0;
+            position: absolute;
+            width: 100%;
+            background-image: url("images/clouds.png");
+            height: 100%;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-size: 200% 100%;
+            opacity: 0.2;
+            mix-blend-mode: hard-light;
+            background-position: 20% -200px;
+        }
+</style>
+
+<MudGrid>
+    <MudItem xs="12" sm="6" md="4" >
+        <MudPaper Elevation="25" Class="d-flex flex-row pt-6 pb-4 mud-height-full">
+            <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Class="mx-4" Style="width:54px; height:54px"></MudIcon>
+            <div>
+                <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">People involved</MudText>
+                <MudText Typo="Typo.h5">247</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="25" Class="d-flex flex-row pt-6 pb-4 mud-height-full">
+            <MudIcon Icon="@Icons.Material.Filled.Quiz" Color="Color.Success" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+            <div>
+                <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Active Quizzes</MudText>
+                <MudText Typo="Typo.h5">2</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudPaper Elevation="25" Class="d-flex flex-row pt-6 pb-4 mud-height-full">
+            <MudIcon Icon="@Icons.Material.Filled.Apps" Color="Color.Tertiary" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+            <div>
+                <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1">Played quiz games</MudText>
+                <MudText Typo="Typo.h5">300</MudText>
+            </div>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12">
+        <MudPaper Elevation="20">
+            <MudText class="parallax text-center pt-8"/>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12" >
+        <MudPaper Elevation="25" Class="d-flex flex-column overflow-auto pa-5">
+            <MudIcon Icon="@Icons.Material.Filled.TouchApp" Color="Color.Tertiary" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+            <QuizTable></QuizTable>
+        </MudPaper>
+    </MudItem>
+</MudGrid>

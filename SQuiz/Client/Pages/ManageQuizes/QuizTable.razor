@@ -1,86 +1,72 @@
-﻿@using SQuiz.Shared.Dtos.Quiz
+﻿@using SQuiz.Client.Services
+@using SQuiz.Client.Shared.Components.Dialogs
+@using SQuiz.Shared.Dtos.Quiz
+@using SQuiz.Shared.Extensions
 
 @inject HttpClient Http
+@inject CrudDialogService Dialog
 
-Quiz table
-
-@if(Items == null)
-{
-    <span>Loading...</span>
-}
-else
-{
-    @if (ShowModalToDelete)
-    {
-        <p>Are you sure you want to delete quiz with id @SelectedQuiz?.ShortId and name @SelectedQuiz?.Name ?</p>
-        <button @onclick="RemoveSelectedQuiz" class="btn btn-primary">Yes</button>
-        <button @onclick=@(() => {SelectedQuiz = null; ShowModalToDelete = false; StateHasChanged();}) class="btn btn-secondary">No</button>
-    }
-
-    <table class="table table-striped table-bordered table-responsive" style="width: 400px">
-        <thead>
-            <tr class="sticky-lg-top">
-                <th></th>
-                <th scope="col">Id</th>
-                <th scope="col">Name</th>
-                <th scope="col">Questions Count</th>
-                <th scope="col">Is public</th>
-                <th scope="col">Description</th>
-                <th scope="col">Date updated</th>
-                <th scope="col">Date created</th>
-            </tr>
-        </thead>
+<MudText Typo="Typo.h3">
+    Quiz table
+</MudText>
+<LoadingWrapper WaitFor="Items">
+    <MudTable Items="Items" Hover="true" SortLabel="Sort By" Elevation="0">
+        <HeaderContent>
+            <MudTh></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<QuizOptionDto, object>(x => x.ShortId)">Id</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<QuizOptionDto, object>(x => x.Name)">Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<QuizOptionDto, object>(x => x.QuestionsCount)">Number of questions</MudTableSortLabel></MudTh>
+            <MudTh>Is public</MudTh>
+            <MudTh>Description</MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<QuizOptionDto, object>(x=>x.DateUpdated!)">Date updated</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortBy="new Func<QuizOptionDto, object>(x=>x.DateCreated!)">Date created</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudButtonGroup Size="Size.Small">
+                    <MudIconButton Icon="@Icons.Material.Filled.Info" Href="@($"manage-quiz/{context.Id}")"></MudIconButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" @onclick=@(() => OpenModalToRemove(@context))></MudIconButton>
+                </MudButtonGroup>
+            </MudTd>
+            <MudTd DataLabel="Id">@context.ShortId</MudTd>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Number of questions">@context.QuestionsCount</MudTd>
+            <MudTd DataLabel="Is public">@context.IsPublic</MudTd>
+            <MudTd DataLabel="Description">@context.Description</MudTd>
+            <MudTd DataLabel="Date updated">@context.DateUpdated.ToShortDateString()</MudTd>
+            <MudTd DataLabel="Date created">@context.DateCreated.ToShortDateString()</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[]{50, 100}" />
+        </PagerContent>
+    </MudTable>
+</LoadingWrapper>
         
-        <tbody>
-            @foreach(var item in Items) 
-            {
-                <tr>
-                    <td scope="row">
-                        <a class="btn btn-sm btn-info oi oi-pencil" href="manage-quiz/@item.Id"></a>
-                        <button class="btn btn-sm btn-danger oi oi-trash" @onclick=@(() => OpenModalToRemove(item))></button>
-                    </td>
-                    <td >@item.ShortId</td>
-                    <td >@item.Name</td>
-                    <td >@item.QuestionsCount</td>
-                    <td >@item.IsPublic</td>
-                    <td ><span>@item.Description</span> </td>
-                    <td >@item.DateUpdated</td>
-                    <td >@item.DateCreated</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-
 @code {
     public List<QuizOptionDto>? Items { get; set; }
-    public bool ShowModalToDelete { get; set; }
-    public QuizOptionDto? SelectedQuiz { get; set; }
-
+    
     protected override async Task OnInitializedAsync()
     {
         Items = await Http.GetFromJsonAsync<List<QuizOptionDto>>("Quizzes");
     }
 
-    public void OpenModalToRemove(QuizOptionDto quiz)
+    public async Task OpenModalToRemove(QuizOptionDto quiz)
     {
-        ShowModalToDelete = true;
-        SelectedQuiz = quiz;
-        StateHasChanged();
+        var confirmed = await Dialog.AskToDeleteItem(quiz.Name, "quiz");
+
+        if (confirmed)
+        {
+            await RemoveSelectedQuiz(quiz);
+        }
     }
 
-    public async Task RemoveSelectedQuiz()
+    public async Task RemoveSelectedQuiz(QuizOptionDto quiz)
     {
-        if (SelectedQuiz != null)
-        {
-            var response = await Http.DeleteAsync($"Quizzes/{SelectedQuiz.Id}");
+        var response = await Http.DeleteAsync($"Quizzes/{quiz.Id}");
 
-            if (response.IsSuccessStatusCode)
-            {
-                ShowModalToDelete = false;
-                Items?.Remove(SelectedQuiz);
-                SelectedQuiz = null;
-            }
+        if (response.IsSuccessStatusCode)
+        {
+            Items?.Remove(quiz);
         }
     }
 }

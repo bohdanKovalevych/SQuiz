@@ -4,74 +4,68 @@
 @using SQuiz.Shared.Models
 
 <StepItem Title="@Title" Order=@(QuestionIndex + 2)>
-    <div>
-        <button class="btn btn-secondary m-1" @onclick="BackToManageQuestions">Manage Questions</button>
-        <ValidationErrorMessage Model="Model" For=@($"Questions[{QuestionIndex}].QuestionText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
-        <div class="input-group m-1">
-            <label class="form-control">Question Text *</label>
-            <input class="form-control w-50" @bind-value="Question.QuestionText" />
-        </div>
-        <div class="input-group m-1">
-            <label class="form-control">Answering Time</label>
-            <select class="form-select w-50" @bind="Question.AnsweringTime">
-                @foreach (var answeringTime in Enum.GetValues<Question.ANSWERING_TIME>())
-                {
-                    <option value="@answeringTime">@answeringTime.ToString()</option>
-                }
-            </select>
-        </div>
-        <div class="input-group m-1">
-            <label class="form-control">Answering Points</label>
-            <select class="form-select w-50" @bind="Question.Points">
-                @foreach (var pointsTime in Enum.GetValues<Question.POINTS>())
-                {
-                    <option value="@pointsTime">@pointsTime.ToString()</option>
-                }
-            </select>
-        </div>
-        <table class="table-striped w-100">
-            <tr>
-                <th>Name</th>
-                <th>Value</th>
-                <th>@((char)('a' + Question.CorrectAnswerIndex)) Is Correct</th>
-            </tr>
-            @for (var answerIndex = 0; answerIndex < Question.Answers.Count; ++answerIndex)
-            {
-                var answer = Question.Answers[answerIndex];
-                var isCorrect = answerIndex == Question.CorrectAnswerIndex;
-                var isRequired = answerIndex < 2;
-                <tr>
-                    <td colspan="2">
-                        <ValidationErrorMessage Model="Model" For=@($"Questions[{QuestionIndex}].Answers[{answerIndex}].AnswerText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
-                        <div class="input-group m-1">
-                            <label class="form-control">@((char) ('a' + answerIndex)) @(isRequired ? "*" : "")</label>
-                            <input class="form-control w-50" @bind-value="answer.AnswerText" />
-                        </div>
-                    </td>
-                    <td>
-                        <input class="m-3" data-toggle="toggle" type="radio" name="isCorrect" value="@answerIndex"
-                            @onchange="@(e => Question.CorrectAnswerIndex = int.Parse(e?.Value.ToString()))"
-                           checked=@(Question.CorrectAnswerIndex == answerIndex) />
-                        @if (answerIndex != 0)
-                        {
-                            <button class="btn rounded oi oi-arrow-top" @onclick=@(() => MoveUp(answer))></button>
-                        }
-                        @if (answerIndex + 1 != Question.Answers.Count)
-                        {
-                            <button class="btn rounded oi oi-arrow-bottom" @onclick=@(() => MoveDown(answer))></button>
-                        }
-                        @if (answerIndex > 1)
-                        {
-                            <button class="btn-close float-end" @onclick=@(() => DeleteAnswer(answer))></button>
-                        }
-                    </td>
-                </tr>
-                
-            }
-        </table>
-        <button class="btn btn-secondary m-1" @onclick="AddAnswer">Add answer</button>
-
-    </div>
+    <MudButton 
+        Color="Color.Default"
+        Variant="Variant.Filled"
+        @onclick="BackToManageQuestions">Manage Questions</MudButton>
+    <MudGrid Justify="Justify.SpaceBetween">
+        <MudItem xs="12" sm="8" md="6">
+            <MudPaper Class="pa-4 mud-height-full">
+                <ValidationErrorMessage Model="Model" For=@($"Questions[{QuestionIndex}].QuestionText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
+                <MudTextField T="string" Label="Question Text *" Variant="Variant.Outlined" @bind-Text="Question.QuestionText"/>
+                <MudSelect T="Question.ANSWERING_TIME" Label="Answering Time" @bind-Value="Question.AnsweringTime">
+                    @foreach (var answeringTime in Enum.GetValues<Question.ANSWERING_TIME>())
+                    {
+                        <MudSelectItem  Value="@answeringTime">
+                            @answeringTime.ToString()
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect T="Question.POINTS" Label="Points" @bind-Value="Question.Points">
+                    @foreach (var points in Enum.GetValues<Question.POINTS>())
+                    {
+                        <MudSelectItem Value="@points">
+                            @points.ToString()
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="8" md="7">
+            <MovableList 
+                Items="Question.Answers"
+                AddItemDelegate="AddAnswer"
+                Context="answer"
+                Clickable="true"
+                @bind-SelectedValue="SelectedAnswer"
+                Header=@($"Answers ({(char) ('a' + Question.CorrectAnswerIndex)} is correct)")
+                OnReorder="new EventCallback<MudItemDropInfo<AnswerDto>>(this, OnReorder)">
+                <ItemTemplate>
+                    <ValidationErrorMessage Model="Model" For=@($"Questions[{QuestionIndex}].Answers[{answer?.Order}].AnswerText") ValidationResult="Parent.ValidationResult" />
+                    <MudPaper Elevation="0" Class="pl-3 d-flex flex-row align-center gap-2 flex-grow-1">
+                        <MudCheckBox 
+                            T="bool"
+                            Checked="answer?.Order == Question.CorrectAnswerIndex"
+                            CheckedChanged=@(isChecked => SetCorrect(answer, isChecked))
+                            Label=@($"{(char)('a' + answer.Order)}. ") />
+                        <MudText>@answer.AnswerText</MudText>
+                    </MudPaper>
+                </ItemTemplate>
+            </MovableList>
+        </MudItem>
+        @if (SelectedAnswer != null)
+        {
+            var index = Question.Answers.IndexOf(SelectedAnswer);
+            var letter = (char)('a' + index);
+            var label = $"Text for variant {letter}";
+            <MudItem xs="12" sm="4">
+                <MudPaper Class="px-5 py-16 d-flex flex-row flex-wrap align-content-center mud-height-full" Style="position: relative">
+                    <MudTextField T="string" Label="@label" Variant="Variant.Outlined" @bind-Text="SelectedAnswer.AnswerText"></MudTextField>
+                    <MudFab Icon="@Icons.Material.Filled.Close" Size="Size.Small" Style="position: absolute; right: 5px; top: 5px" @onclick=@(() => SelectedAnswer = null) />
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
 </StepItem>
 
 @code {
@@ -80,6 +74,8 @@
 
     [Parameter]
     public QuestionDto Question { get; set; }
+
+    public AnswerDto? SelectedAnswer { get; set; }
 
     public EditQuizDto Model => Parent.Model;
 
@@ -103,47 +99,28 @@
         Parent.NavigateTo(1);
     }
 
-    public void AddAnswer() 
+    public AnswerDto AddAnswer() 
     {
-        Question.Answers.Add(new AnswerDto());
+        return new AnswerDto() { Order = Question.Answers.Count };
     }
 
-    public void DeleteAnswer(AnswerDto answer) 
+    public void OnReorder(MudItemDropInfo<AnswerDto> dropInfo)
     {
-        Question.Answers.Remove(answer);
+        if (Question.CorrectAnswerIndex == dropInfo.IndexInZone)
+        {
+            Question.CorrectAnswerIndex = dropInfo.Item.Order;
+        }
+        else if (Question.CorrectAnswerIndex == dropInfo.Item.Order)
+        {
+            Question.CorrectAnswerIndex = dropInfo.IndexInZone;
+        }
     }
 
-    public void MoveDown(AnswerDto answer) 
+    public void SetCorrect(AnswerDto answer, bool isChecked)
     {
-        var currentIndex = Question.Answers.IndexOf(answer);
-        var downIndex = currentIndex + 1;
-
-        if (Question.CorrectAnswerIndex == currentIndex)
+        if (isChecked)
         {
-            Question.CorrectAnswerIndex = downIndex;
+            Question.CorrectAnswerIndex = answer.Order;
         }
-        else if (Question.CorrectAnswerIndex == downIndex)
-        {
-            Question.CorrectAnswerIndex = currentIndex;
-        }
-
-        Question.Answers.Swap(currentIndex, downIndex);
-    }
-
-    public void MoveUp(AnswerDto answer)
-    {
-        var currentIndex = Question.Answers.IndexOf(answer);
-        var upIndex = currentIndex - 1;
-        
-        if (Question.CorrectAnswerIndex == currentIndex)
-        {
-            Question.CorrectAnswerIndex = upIndex;
-        }
-        else if (Question.CorrectAnswerIndex == upIndex)
-        {
-            Question.CorrectAnswerIndex = currentIndex;
-        }
-
-        Question.Answers.Swap(currentIndex, upIndex);
     }
 }

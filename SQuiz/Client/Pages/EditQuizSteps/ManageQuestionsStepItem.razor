@@ -1,36 +1,25 @@
 ﻿@using SQuiz.Client.Shared.Components
 @using SQuiz.Shared.Dtos.Quiz
 @using SQuiz.Shared.Extensions
+@using MudBlazor.Utilities
 
 <StepItem Title="Manage Questions" Order="1">
-    <div>
-        <div class="m-1" >
-            <div class="list-group">
-                @foreach (var (question, questionIndex) in Model.Questions.WithIndex()) 
-                {
-                    <div class="list-group-item">
-                        <div class="row">
-                            <span class="small col-3">Question @(questionIndex + 1)</span>
-                            <span class="small text-truncate col-3">@question.QuestionText</span>
-                            <div class="col">
-                                <button class="btn btn-danger oi oi-trash float-end" @onclick=@(() => RemoveQuestion(question))></button>
-                                <button class="btn btn-outline-dark oi oi-pencil float-end" @onclick=@(() => NavigateToEditQuestion(question))></button>
-                                @if (questionIndex + 1 != Model.Questions.Count)
-                                {
-                                    <button class="btn btn-outline-dark oi oi-arrow-bottom float-end" @onclick=@(() => MoveDown(question))></button>
-                                }
-                                @if (questionIndex > 0)
-                                {
-                                    <button class="btn btn-outline-dark oi oi-arrow-top float-end" @onclick=@(() => MoveUp(question))></button>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-        </div>
-        <button class="btn btn-primary m-1" @onclick="AddQuestion">Add Question</button>
-    </div>
+    <MovableList 
+        Items="Model.Questions" 
+        AddItemDelegate="AddItemDelegate"
+        Header="Questions"
+        OnAdd="new EventCallback<QuestionDto>(this, OnAdd)"
+        OnReorder="new EventCallback<MudItemDropInfo<QuestionDto>>(this, OnReorder)"
+        OnRemove="new EventCallback<QuestionDto>(this, OnRemove)">
+        <ItemTemplate Context="question">
+            <MudText Class="pa-1">@question.QuestionText</MudText>
+        </ItemTemplate>
+        <MenuActions Context="question">
+            <MudMenuItem 
+                Icon="@Icons.Material.Filled.Edit"
+                @onclick=@(() => NavigateToEditQuestion(question))>Edit</MudMenuItem>
+        </MenuActions>
+    </MovableList>
 </StepItem>
 
 @code {
@@ -46,38 +35,38 @@
 
     public EditQuizDto? InitialModel => Parent.InitialModel;
 
-    public void AddQuestion() 
+    void OnRemove(QuestionDto question)
     {
-        Model.Questions.Add(new QuestionDto());
+        Parent.RemoveByIndex(Model.Questions.Count + QUESTION_START_INDEX);
+    }
+
+    void OnAdd(QuestionDto question)
+    {
         Parent.Rerender();
     }
 
-    public void RemoveQuestion(QuestionDto question)
+    void OnReorder(MudItemDropInfo<QuestionDto> dropItem)
     {
-        var questionIndex = Model.Questions.IndexOf(question);
-        for(var i = questionIndex; i + 1 < Model.Questions.Count; ++i)
+        Parent.Rerender();
+    }
+
+    QuestionDto AddItemDelegate()
+    {
+        return new QuestionDto()
         {
-            Model.Questions[i] = Model.Questions[i + 1];
-        }
-        Parent.RemoveByIndex(Model.Questions.Count - 1 + QUESTION_START_INDEX);
-        Model.Questions.RemoveAt(Model.Questions.Count - 1);
+            QuestionText = "New question",
+            Order = Model.Questions.Count,
+            Answers = new List<AnswerDto>()
+            {
+                new AnswerDto() { Order = 0 },
+                new AnswerDto() { Order = 1 }
+            }
+        };
     }
 
     public void NavigateToEditQuestion(QuestionDto question) 
     {
         var questionIndex = Model.Questions.IndexOf(question);
         Parent.NavigateTo(questionIndex + QUESTION_START_INDEX);
-    }
-
-    public void MoveUp(QuestionDto question)
-    {
-        var index = Model.Questions.IndexOf(question);
-        Model.Questions.Swap(index, index - 1);
-    }
-
-    public void MoveDown(QuestionDto question)
-    {
-        var index = Model.Questions.IndexOf(question);
-        Model.Questions.Swap(index, index + 1);
     }
 }

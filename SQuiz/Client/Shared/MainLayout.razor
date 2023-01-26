@@ -1,17 +1,53 @@
-﻿@inherits LayoutComponentBase
+﻿@using SQuiz.Client.Interfaces
+@using SQuiz.Client.Themes
+@inherits LayoutComponentBase
+@inject IThemeService ThemeService
 
-<div class="page">
-    <div class="sidebar">
+<MudThemeProvider Theme="MainTheme.Instance.Value" IsDarkMode="ThemeService.IsDarkMode" IsDarkModeChanged="IsDarkModeChanged" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="0">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+        <MudSpacer />
+        <MudToggleIconButton 
+            Icon="@Icons.Material.Filled.LightMode"
+            ToggledIcon="@Icons.Material.Filled.DarkMode"
+            @bind-Toggled="ThemeService.IsDarkMode"></MudToggleIconButton>
+        <LoginDisplay />
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">SQuiz</MudText>
+        </MudDrawerHeader>
         <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4 auth">
-            <LoginDisplay />
-        </div>
-
-        <article class="content px-4">
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-8 pt-8">
             @Body
-        </article>
-    </main>
-</div>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    bool _drawerOpen = true;
+    bool _isDarkMode = false;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    Task IsDarkModeChanged(bool isDarkMode)
+    {
+        return ThemeService.ChangeDarkMode(isDarkMode);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ThemeService.InitializeAsync();
+        _isDarkMode = ThemeService.IsDarkMode;
+    }
+
+}

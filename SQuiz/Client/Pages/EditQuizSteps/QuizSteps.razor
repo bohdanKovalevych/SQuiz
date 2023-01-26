@@ -5,7 +5,10 @@
 
 <Steps Title="@StepsTitle" @ref="Steps">
     <SubHeaderContent>
-        <p class="alert-danger">@AfterSubmitErrorMessage</p>
+        @if (!string.IsNullOrEmpty(AfterSubmitErrorMessage))
+        {
+            <MudAlert Severity="Severity.Error">@AfterSubmitErrorMessage</MudAlert>
+        }
     </SubHeaderContent>
     <ChildContent>
         <CascadingValue Value="this">

@@ -9,5 +9,8 @@
         public int QuestionCount { get; set; }
         public DateTimeOffset? StartDate { get; set; }
         public DateTimeOffset? EndDate { get; set; }
+
+        public bool IsActive => DateTime.Now <= EndDate 
+            && DateTime.Now >= StartDate;
     }
 }

@@ -1,0 +1,12 @@
+﻿<DialogBaseComponent 
+    OkText="Delete">
+    Are you sure you want to delete '@ItemType' with name '@ItemName'?
+</DialogBaseComponent>
+
+@code {
+    [Parameter]
+    public string ItemType { get; set; }
+
+    [Parameter]
+    public string ItemName { get; set; }
+}

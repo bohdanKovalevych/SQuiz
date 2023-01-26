@@ -7,11 +7,13 @@
 
 <AuthorizeView>
     <Authorized>
-        Hello, @context.User.Identity?.Name!
-        <button class="nav-link btn btn-link" @onclick="BeginLogout">Log out</button>
+        <MudText Typo="Typo.subtitle1">
+            Hello, @context.User.Identity?.Name! 
+        </MudText>
+        <MudLink @onclick="BeginLogout" Color="Color.Inherit" Class="ml-3">Log out</MudLink>
     </Authorized>
     <NotAuthorized>
-        <a href="authentication/login">Log in</a>
+        <MudLink Href="authentication/login" Color="Color.Inherit">Log in</MudLink>
     </NotAuthorized>
 </AuthorizeView>
 

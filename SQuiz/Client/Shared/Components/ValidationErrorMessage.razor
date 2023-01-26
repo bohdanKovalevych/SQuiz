@@ -2,9 +2,11 @@
 @using System.Linq.Expressions
 @typeparam T
 
-<p class="alert-danger">
-    @Message
-</p>
+@if (!string.IsNullOrEmpty(Message))
+{
+    <MudAlert Severity="Severity.Error">@Message</MudAlert>
+}
+
 
 @code {
     [Parameter]

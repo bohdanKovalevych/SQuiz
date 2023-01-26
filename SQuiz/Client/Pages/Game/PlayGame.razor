@@ -14,40 +14,58 @@
 @inject IPlayGameService PlayGameService
 
 <LoadingWrapper WaitFor="Question">
-    <div class="container play-game-container">
-        <div class="card play-game-card">
-            <div class="card-header">
-                <div>
-                    @(Question?.Order + 1). @Question?.QuestionText
-                </div>
+    <MudCard>
+        <MudCardHeader>
+            <div>
+                @(Question?.Order + 1). @Question?.QuestionText
             </div>
-            <div class="card-body">
-                @foreach (var (answer, index) in Question?.Answers.WithIndex() 
-                    ?? new List<GameAnswerDto>().WithIndex())
+        </MudCardHeader>
+        <MudCardContent>
+            <MudGrid>
+                @foreach (var (answer, index) in Question?.Answers.WithIndex()
+                ?? new List<GameAnswerDto>().WithIndex())
                 {
                     var v = (char)('a' + index);
-
-                    <div class="m-3 p-5 btn variant variant-@v" @onclick=@(() => SendAnswer(answer))>
-                        @(v). @answer.AnswerText
-                    </div>
+                    
+                    var color = Enum.IsDefined(typeof(Color), index + 1)
+                    ? (Color)index + 1
+                    : Color.Default;
+                    <MudItem>
+                        <MudFab @onclick=@(() => SendAnswer(answer))
+                            Label=@($"{v}. {answer.AnswerText}")
+                            Color="Color.Primary"
+                            Class=@($"pa-10 {VariantColors[index % VariantColors.Count]}")/>
+                    </MudItem>
                 }
+            </MudGrid>
+            
+        </MudCardContent>
+        <MudCardActions>
+            <MudProgressLinear Class="w-100" Max="@MaxTime" Value="@ElapsedTime" />
+            <div>
+                <MudIcon Icon="@Icons.Material.Filled.Timer"/>
+                @ElapsedTime.ToString("N1") seconds left
             </div>
-            <div class="card-footer">
-                <progress class="w-100" max="@MaxTime" value="@ElapsedTime" For></progress>
-                <div>
-                    <span class="oi oi-timer"></span>
-                    @ElapsedTime.ToString("N1") seconds left
-                </div>
-            </div>
-        </div>
-    </div>
+        </MudCardActions>
+    </MudCard>
 </LoadingWrapper>
 
 @code {
     public GameQuestionDto? Question;
     public double ElapsedTime;
     public double MaxTime;
-
+    public List<string> VariantColors = new List<string>()
+    {
+        "green",
+        "red",
+        "blue",
+        "yellow darken-3",
+        "red lighten-2",
+        "pink accent-2",
+        "deep-purple",
+        "teal",
+        "amber"
+    };
     public async Task GetQuestion()
     {
         Question = null;
