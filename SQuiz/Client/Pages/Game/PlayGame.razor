@@ -7,8 +7,6 @@
 @using System.Net
 
 @implements IDisposable
-@inject ICookieStoreService CookieStoreService
-@inject ISessionStorageService SessionStorage
 @inject PublicClient Http
 @inject NavigationManager Nav
 @inject IPlayGameService PlayGameService
@@ -80,7 +78,8 @@
 
         Question = await response.Content.ReadFromJsonAsync<GameQuestionDto>();
 
-        PlayGameService.InitQuestionAndStartTimer(Question);
+        PlayGameService.InitQuestion(Question);
+        PlayGameService.StartTimer();
         MaxTime = PlayGameService.CurrentMaxTime;
         StateHasChanged();
     }

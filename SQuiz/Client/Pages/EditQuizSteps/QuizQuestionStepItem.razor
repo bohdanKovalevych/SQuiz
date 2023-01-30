@@ -1,14 +1,23 @@
 ﻿@using SQuiz.Client.Shared.Components
+@using SQuiz.Shared.Dtos.Game
 @using SQuiz.Shared.Dtos.Quiz
 @using SQuiz.Shared.Extensions
 @using SQuiz.Shared.Models
 
+@inject ISessionStorageService Storage
+@inject NavigationManager Nav
+
 <StepItem Title="@Title" Order=@(QuestionIndex + 2)>
-    <MudButton 
+    <MudFab 
         Color="Color.Default"
-        Variant="Variant.Filled"
-        @onclick="BackToManageQuestions">Manage Questions</MudButton>
-    <MudGrid Justify="Justify.SpaceBetween">
+        Label="Manage Questions"
+        @onclick="BackToManageQuestions"/>
+    <MudFab 
+        Class="ml-2"
+        Label="Preview question"
+        Icon="@Icons.Material.Filled.Preview"
+        @onclick="GoToPreview" />
+    <MudGrid Justify="Justify.Center">
         <MudItem xs="12" sm="8" md="6">
             <MudPaper Class="pa-4 mud-height-full">
                 <ValidationErrorMessage Model="Model" For=@($"Questions[{QuestionIndex}].QuestionText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
@@ -31,6 +40,18 @@
                 </MudSelect>
             </MudPaper>
         </MudItem>
+        @if (SelectedAnswer != null)
+        {
+            var index = SelectedAnswer.Order;
+            var letter = (char)('a' + index);
+            var label = $"Text for variant {letter}";
+            <MudItem xs="12" sm="4">
+                <MudPaper Class="px-2 pt-12 pb-2 mud-height-full" Style="position: relative">
+                    <MudTextField T="string" Label="@label" Variant="Variant.Outlined" @ref="textField" @bind-Text="SelectedAnswer.AnswerText"/>
+                    <MudFab Icon="@Icons.Material.Filled.Close" Size="Size.Small" Style="position: absolute; right: 5px; top: 5px" @onclick=@(() => SelectedAnswer = null) />
+                </MudPaper>
+            </MudItem>
+        }
         <MudItem xs="12" sm="8" md="7">
             <MovableList 
                 Items="Question.Answers"
@@ -41,7 +62,6 @@
                 Header=@($"Answers ({(char) ('a' + Question.CorrectAnswerIndex)} is correct)")
                 OnReorder="new EventCallback<MudItemDropInfo<AnswerDto>>(this, OnReorder)">
                 <ItemTemplate>
-                    <ValidationErrorMessage Model="Model" For=@($"Questions[{QuestionIndex}].Answers[{answer?.Order}].AnswerText") ValidationResult="Parent.ValidationResult" />
                     <MudPaper Elevation="0" Class="pl-3 d-flex flex-row align-center gap-2 flex-grow-1">
                         <MudCheckBox 
                             T="bool"
@@ -49,22 +69,11 @@
                             CheckedChanged=@(isChecked => SetCorrect(answer, isChecked))
                             Label=@($"{(char)('a' + answer.Order)}. ") />
                         <MudText>@answer.AnswerText</MudText>
+                        <ValidationErrorMessage Model="Model" For=@($"Questions[{QuestionIndex}].Answers[{Question.Answers.IndexOf(answer)}].AnswerText") ValidationResult="Parent.ValidationResult"/> 
                     </MudPaper>
                 </ItemTemplate>
             </MovableList>
         </MudItem>
-        @if (SelectedAnswer != null)
-        {
-            var index = Question.Answers.IndexOf(SelectedAnswer);
-            var letter = (char)('a' + index);
-            var label = $"Text for variant {letter}";
-            <MudItem xs="12" sm="4">
-                <MudPaper Class="px-5 py-16 d-flex flex-row flex-wrap align-content-center mud-height-full" Style="position: relative">
-                    <MudTextField T="string" Label="@label" Variant="Variant.Outlined" @bind-Text="SelectedAnswer.AnswerText"></MudTextField>
-                    <MudFab Icon="@Icons.Material.Filled.Close" Size="Size.Small" Style="position: absolute; right: 5px; top: 5px" @onclick=@(() => SelectedAnswer = null) />
-                </MudPaper>
-            </MudItem>
-        }
     </MudGrid>
 </StepItem>
 
@@ -72,10 +81,21 @@
     [CascadingParameter]
     public QuizSteps Parent { get; set; }
 
+    MudTextField<string>? textField;
+
     [Parameter]
     public QuestionDto Question { get; set; }
 
-    public AnswerDto? SelectedAnswer { get; set; }
+    private AnswerDto? _selectedAnswer;
+    public AnswerDto? SelectedAnswer 
+    { 
+        get => _selectedAnswer; 
+        set 
+        {
+            _selectedAnswer = value;
+            textField?.FocusAsync();
+        }
+    }
 
     public EditQuizDto Model => Parent.Model;
 
@@ -114,6 +134,8 @@
         {
             Question.CorrectAnswerIndex = dropInfo.IndexInZone;
         }
+
+        Parent.Validate();
     }
 
     public void SetCorrect(AnswerDto answer, bool isChecked)
@@ -122,5 +144,13 @@
         {
             Question.CorrectAnswerIndex = answer.Order;
         }
+    }
+
+    async Task GoToPreview()
+    {
+        await Parent.SaveCurrentState();
+
+        await Storage.SetItemAsync(Constants.SessionStorageKey.PreviewQuestion, Question);
+        Nav.NavigateTo($"previewQuestion/{Parent.GetBackUrl}");
     }
 }

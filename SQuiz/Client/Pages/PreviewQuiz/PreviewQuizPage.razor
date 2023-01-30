@@ -1,0 +1,27 @@
+﻿@page "/previewGame/{backUrl}"
+@layout PlayerLayout
+@using SQuiz.Client.Pages.Game.GameCoreComponents
+@using SQuiz.Shared.Dtos.Game
+@inject NavigationManager Nav
+@inject ISessionStorageService Storage
+
+<PreviewBase BackUrl="@BackUrl">
+    <ShowGameComponent Game="_game" OnStart="EventCallback.Empty" />
+</PreviewBase>
+
+@code {
+    [Parameter]
+    public string? BackUrl { get; set; }
+
+    GameOptionDto _game;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _game = await Storage.GetItemAsync<GameOptionDto>(Constants.SessionStorageKey.PreviewGame);
+
+        if (_game == null)
+        {
+            Nav.NavigateTo(BackUrl);
+        }
+    }
+}

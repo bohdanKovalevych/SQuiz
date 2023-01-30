@@ -1,0 +1,50 @@
+﻿@using SQuiz.Client.Interfaces
+@implements IDisposable
+@inject IPlayGameService PlayGameService
+
+<MudProgressLinear Class="w-100" Max="@_maxTime" Value="@_elapsedTime" />
+<div>
+    <MudIcon Icon="@Icons.Material.Filled.Timer" />
+    @_elapsedTime.ToString("N1") seconds left
+</div>
+
+@code {
+    double _elapsedTime;
+    double _maxTime;
+
+    public void OnStartPreparing()
+    {
+        _maxTime = PlayGameService.CurrentMaxTime;
+        _elapsedTime = _maxTime;
+        StateHasChanged();
+    }
+
+    public void OnTimeChanged(double time)
+    {
+        _elapsedTime = time;
+        StateHasChanged();
+    }
+
+    public Task OnTimeEnd()
+    {
+        _elapsedTime = 0.0;
+        StateHasChanged();
+
+        return Task.CompletedTask;
+    }
+
+
+    protected override void OnInitialized()
+    {
+        PlayGameService.OnStartPreparing += OnStartPreparing;
+        PlayGameService.OnTimeChanged += OnTimeChanged;
+        PlayGameService.OnTimeEnd += OnTimeEnd;
+    }
+
+    public void Dispose()
+    {
+        PlayGameService.OnStartPreparing -= OnStartPreparing;
+        PlayGameService.OnTimeChanged -= OnTimeChanged;
+        PlayGameService.OnTimeEnd -= OnTimeEnd;
+    }
+}

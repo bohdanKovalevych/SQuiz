@@ -6,17 +6,19 @@ namespace SQuiz.Client.Services
 {
     public class PlayGameService : IPlayGameService, IDisposable
     {
-        public event Func<Task>? OnTimeEnd;
-        public event Func<SendAnswerDto, Task>? OnAnswered;
-        public event Action<double>? OnTimeChanged;
-        private System.Timers.Timer _timer;
-        private double _currentSeconds;
-        
         private readonly Dictionary<Question.ANSWERING_TIME, double> _maxSeconds;
+        private System.Timers.Timer _gameTimer;
+        private System.Timers.Timer _prepareTimer;
+        private double _currentSeconds;
+        private double _delayToPrepare = 4000;
+        private double _gameTimeUint = 100;
+
         public PlayGameService()
         {
-            _timer = new System.Timers.Timer(100);
-            _timer.Elapsed += Timer_Elapsed;
+            _gameTimer = new System.Timers.Timer(_gameTimeUint);
+            _prepareTimer = new System.Timers.Timer(_delayToPrepare);
+            _prepareTimer.Elapsed += PrepareTimer_Elapsed;
+            _gameTimer.Elapsed += GameTimer_Elapsed;
             _maxSeconds = new Dictionary<Question.ANSWERING_TIME, double>()
             { 
                 [Question.ANSWERING_TIME.Short] = 20.0,
@@ -26,37 +28,64 @@ namespace SQuiz.Client.Services
 
         public double CurrentMaxTime { get; private set; }
 
-        public void InitQuestionAndStartTimer(GameQuestionDto questionDto)
+        public void InitQuestion(GameQuestionDto questionDto)
         {
             CurrentMaxTime = _maxSeconds[questionDto.AnsweringTime];
             _currentSeconds = CurrentMaxTime;
-            _timer.Start();
+        }
+
+        public void DelayToPrepareForQuestion()
+        {
+            OnStartPreparing?.Invoke();
+            _prepareTimer.Start();
+        }
+
+        public void StartTimer()
+        {
+            _gameTimer.Start();
         }
 
         public async Task SendAnswer(string? answerId)
         {
-            _timer.Stop();
-            await OnAnswered(new SendAnswerDto()
+            _gameTimer.Stop();
+            if (OnAnswered != null)
             {
-                AnswerId = answerId,
-                TimeToSolve = TimeSpan.FromSeconds(_currentSeconds)
-            });
+                await OnAnswered(new SendAnswerDto()
+                {
+                    AnswerId = answerId,
+                    TimeToSolve = TimeSpan.FromSeconds(_currentSeconds)
+                });
+            }
+        }
+
+        public void ReceivePoints(ReceivedPointsDto points)
+        {
+            OnReceivedPoints?.Invoke(points);
+        }
+
+        public async void EndQuiz()
+        {
+            if (OnQuizEnded != null)
+            {
+                await OnQuizEnded();
+            }
+            _prepareTimer?.Stop();
+            _gameTimer?.Stop();
         }
 
         public void Dispose()
         {
-            _timer.Elapsed -= Timer_Elapsed;
-            _timer?.Dispose();
-            GC.SuppressFinalize(this);
+            _prepareTimer?.Dispose();
+            _gameTimer?.Dispose();
         }
 
-        private async void Timer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+        private async void GameTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
         {
             _currentSeconds -= 0.1;
             
             if (_currentSeconds <= 0)
             {
-                _timer.Stop();
+                _gameTimer.Stop();
                 
                 if (OnTimeEnd != null)
                 {
@@ -73,5 +102,19 @@ namespace SQuiz.Client.Services
 
             OnTimeChanged?.Invoke(_currentSeconds);
         }
+
+        private void PrepareTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e)
+        {
+            _prepareTimer.Stop();
+            OnPrepared?.Invoke();
+        }
+
+        public event Action? OnStartPreparing;
+        public event Action? OnPrepared;
+        public event Func<Task>? OnTimeEnd;
+        public event Func<SendAnswerDto, Task>? OnAnswered;
+        public event Action<ReceivedPointsDto>? OnReceivedPoints;
+        public event Action<double>? OnTimeChanged;
+        public event Func<Task>? OnQuizEnded;
     }
 }

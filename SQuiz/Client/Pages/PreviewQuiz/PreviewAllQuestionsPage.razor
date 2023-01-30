@@ -1,0 +1,129 @@
+﻿@page "/previewAllQuestions/{backUrl}"
+@layout PlayerLayout
+@using SQuiz.Client.Interfaces
+@using SQuiz.Client.Pages.Game.GameCoreComponents
+@using SQuiz.Shared.Dtos.Game
+@using SQuiz.Shared.Dtos.Quiz
+@using SQuiz.Shared.Interfaces
+@inject NavigationManager Nav
+@inject IPlayGameService PlayGameService
+@inject ISessionStorageService Storage
+@inject IPointsCounter PointsCounter
+@implements IDisposable
+
+<PreviewBase BackUrl="@BackUrl">
+    <PlayGameComponent GetQuestionDelegate="GetQuestion" />
+</PreviewBase>
+
+@code {
+    EditQuizDto? _model;
+    int _totalScore;
+    IEnumerator<QuestionDto>? _questions;
+
+    [Parameter]
+    public string? BackUrl { get; set; }
+
+    async Task<GameQuestionDto?> GetQuestion()
+    {
+        _model ??= await Storage.GetItemAsync<EditQuizDto>(Constants.SessionStorageKey.PreviewAllQuestions);
+
+        if (_model == null)
+        {
+            Nav.NavigateTo(BackUrl);
+            return null;
+        }
+
+        _questions ??= _model.Questions.GetEnumerator();
+        bool hasNextQuestion = _questions.MoveNext();
+
+        if (!hasNextQuestion)
+        {
+            await NavigateToScores();
+            return null;
+        }
+
+        var question = _questions.Current;
+        var gameQuestion = PrepareGameQuestion(question);
+
+        return gameQuestion;
+    }
+
+    private GameQuestionDto PrepareGameQuestion(QuestionDto question)
+    {
+        var gameQuestion = new GameQuestionDto()
+        {
+            AnsweringTime = question.AnsweringTime,
+            Points = question.Points,
+            Order = question.Order,
+            QuestionText = question.QuestionText,
+            Answers = question.Answers
+                .OrderBy(x => x.Order)
+                .Select(x => new GameAnswerDto()
+                {
+                    AnswerText = x.AnswerText,
+                    Id = $"{x.Order}",
+                    Order = x.Order
+                })
+                .ToList()
+        };
+
+        return gameQuestion;
+    }
+
+    private async Task NavigateToScores()
+    {
+        var score = new PlayerDto()
+        {
+            Id = "1",
+            Name = "Your test Name",
+            Points = _totalScore
+        };
+        
+        await Storage.SetItemAsync(Constants.SessionStorageKey.PreviewScore, score);
+        Nav.NavigateTo($"previewGameScores/{BackUrl}");
+    }
+
+    Task OnAnswered(SendAnswerDto answer)
+    {
+        var parsed = int.TryParse(answer.AnswerId, out var order);
+        var question = _questions?.Current;
+        var points = new ReceivedPointsDto()
+        {
+            CorrectAnswerId = question?.CorrectAnswerIndex.ToString(),
+            SelectedAnswerId = answer.AnswerId,
+            TotalPoints = _totalScore
+        };
+
+        if (parsed && question?.CorrectAnswerIndex == order)
+        {
+            points.CurrentPoints = PointsCounter.GetPoints(
+                answer.TimeToSolve, question.AnsweringTime, question.Points);
+            _totalScore += points.CurrentPoints;
+            points.TotalPoints = _totalScore;
+        }
+
+        PlayGameService.ReceivePoints(points);
+
+        return Task.CompletedTask;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _model = await Storage.GetItemAsync<EditQuizDto>(Constants.SessionStorageKey.PreviewAllQuestions);
+
+        if (_model == null)
+        {
+            Nav.NavigateTo(BackUrl);
+            return;
+        }
+
+        _questions = _model.Questions.GetEnumerator();
+        PlayGameService.OnAnswered += OnAnswered;
+    }
+
+
+    public void Dispose()
+    {
+        PlayGameService.OnAnswered -= OnAnswered;
+    }
+}

@@ -1,0 +1,17 @@
+﻿@using SQuiz.Shared.Dtos.Game
+
+<MudAlert Class="pa-3 m-1">You are playing '@Game?.Name'.</MudAlert>
+<MudAlert Severity="Severity.Info" class="pa-3 m-1">Game contains @(Game?.QuestionCount) questions.</MudAlert>
+<MudAlert Severity="Severity.Info" class="pa-3 m-1">When you are ready, press start.</MudAlert>
+<MudButton Color="Color.Primary"
+           Variant="Variant.Filled"
+           Class="pa-3 ma-3"
+           @onclick="OnStart">Start</MudButton>
+
+@code {
+    [Parameter]
+    public GameOptionDto? Game { get; set; }
+
+    [Parameter]
+    public EventCallback OnStart { get; set; }
+}

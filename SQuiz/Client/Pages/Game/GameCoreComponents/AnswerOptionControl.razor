@@ -1,0 +1,63 @@
+﻿@using SQuiz.Shared.Dtos.Game
+
+<MudItem xs="12" sm="6" md="4" lg="3">
+    <MudPaper Elevation="0" Class="mud-height-full d-flex flex-column justify-end">
+        @if (IsCorrect)
+        {
+            <MudAlert Severity="Severity.Success">Correct answer</MudAlert>
+        }
+        else if (IsWrong)
+        {
+            <MudAlert Severity="Severity.Error">Your choice</MudAlert>
+        }
+        <MudButton @onclick=@(() => SendAnswer(Answer))
+                   Disabled=@(AnsweredState)
+                   Variant="Variant.Text"
+                   Color="Color.Success"
+                   Size="Size.Large"
+                   Class=@($"rounded pa-10 {_variantColors[Answer.Order % _variantColors.Count]} white-text mud-width-full mud-height-full")>
+            @($"{v}. {Answer.AnswerText}")
+        </MudButton>
+    </MudPaper>
+</MudItem>
+
+@code {
+    char v;
+    Color color;
+    List<string> _variantColors = new List<string>()
+    {
+        "green",
+        "red",
+        "blue",
+        "yellow darken-3",
+        "red lighten-2",
+        "pink accent-2",
+        "deep-purple",
+        "teal",
+        "amber"
+    };
+
+    protected override void OnInitialized()
+    {
+        var index = Answer.Order;
+        v = (char)('a' + index);
+        color = Enum.IsDefined(typeof(Color), index + 1)
+        ? (Color)index + 1
+        : Color.Default; 
+    }
+
+    bool IsCorrect => AnsweredState && ReceivedPoints?.CorrectAnswerId == Answer.Id;
+    bool IsWrong => AnsweredState && ReceivedPoints?.SelectedAnswerId == Answer.Id && Answer.Id != ReceivedPoints?.CorrectAnswerId;
+
+    [Parameter]
+    public Func<GameAnswerDto, Task> SendAnswer { get; set; }
+
+    [Parameter]
+    public bool AnsweredState { get; set; }
+
+    [Parameter]
+    public GameAnswerDto Answer { get; set; }
+
+    [Parameter]
+    public ReceivedPointsDto? ReceivedPoints { get; set; } 
+}

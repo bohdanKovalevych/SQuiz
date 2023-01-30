@@ -1,5 +1,6 @@
 ﻿@page "/play/showGame"
 @layout PlayerLayout
+@using SQuiz.Client.Pages.Game.GameCoreComponents
 @using SQuiz.Client.Services
 @using SQuiz.Shared.Dtos.Game
 
@@ -9,13 +10,9 @@
 @inject NavigationManager Nav
 
 <LoadingWrapper WaitFor="Game">
-    <MudAlert Class="pa-3 m-1">You are playing '@Game?.Name'.</MudAlert>
-    <MudAlert Severity="Severity.Info" class="pa-3 m-1">Game contains @(Game?.QuestionCount) questions.</MudAlert>
-    <MudAlert Severity="Severity.Info" class="pa-3 m-1">When you are ready, press start.</MudAlert>
-    <MudButton Color="Color.Primary"
-                Variant="Variant.Filled"
-                Class="pa-3 m-1"
-                @onclick="Start">Start</MudButton>
+    <ShowGameComponent
+        Game="Game"
+        OnStart="Start"/>
 </LoadingWrapper>
 
 @code {
@@ -23,21 +20,21 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var playerId = (await CookieStoreService.GetAsync("playerId"))?.Value;
+        var playerId = (await CookieStoreService.GetAsync(Constants.CookiesKey.PlayerId))?.Value;
 
         if (playerId == null)
         {
             Nav.NavigateTo(Nav.BaseUri);
         }
 
-        Game = await SessionStorage.GetItemAsync<GameOptionDto>("game");
+        Game = await SessionStorage.GetItemAsync<GameOptionDto>(Constants.SessionStorageKey.Game);
     }
 
     public async Task Start()
     {
         await CookieStoreService.SetAsync(new Cookie() 
         {
-            Name = "questionIndex",
+            Name = Constants.CookiesKey.QuestionIndex,
             Value = "0"
         });
 

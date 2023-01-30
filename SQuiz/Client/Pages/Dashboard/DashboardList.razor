@@ -1,0 +1,38 @@
+﻿@typeparam T
+
+<MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1 ml-1">@Header</MudText>
+<MudList Clickable SelectedValueChanged=@(e => SelectedValueChanged((T)e))>
+    @foreach (var item in Items)
+    {
+        <MudListItem Value="item">
+            <div class="d-flex flex-row">
+                <MudAvatar>@AvatarLabel(item)</MudAvatar>
+                <div class="ml-1">
+                    <MudText Typo="Typo.subtitle2">@Subtitle1(item)</MudText>
+                    <MudText Typo="Typo.subtitle2">@Subtitle2(item)</MudText>
+                </div>
+            </div>
+        </MudListItem>
+        <MudDivider Style="height: 1.5px" />
+    }
+</MudList>
+
+@code {
+    [Parameter]
+    public string? Header { get; set; }
+
+    [Parameter]
+    public List<T> Items { get; set; }
+
+    [Parameter]
+    public Func<T, string> AvatarLabel { get; set; }
+
+    [Parameter]
+    public Func<T, string> Subtitle1 { get; set; }
+
+    [Parameter]
+    public Func<T, string> Subtitle2 { get; set; }
+
+    [Parameter]
+    public Func<T, Task> SelectedValueChanged { get; set; }
+}

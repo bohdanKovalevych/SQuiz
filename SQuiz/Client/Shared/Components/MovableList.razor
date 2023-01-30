@@ -141,9 +141,7 @@
         var index = Items.IndexOf(item);
         var indexUp = index - 1;
 
-        Items.Swap(index, indexUp);
-
-        var dropInfo = new MudItemDropInfo<TItem>(item, "_", index - 1);
+        var dropInfo = new MudItemDropInfo<TItem>(item, "_", indexUp);
         
         if (OnReorder.HasValue)
         {
@@ -158,9 +156,8 @@
     {
         var index = Items.IndexOf(item);
         var indexDown = index + 1;
-        Items.Swap(index, indexDown);
-
-        var dropInfo = new MudItemDropInfo<TItem>(item, "_", index + 1);
+        
+        var dropInfo = new MudItemDropInfo<TItem>(item, "_", indexDown);
         
         if (OnReorder.HasValue)
         {
@@ -181,8 +178,7 @@
         }
         
         Items.UpdateOrder(info, x => ((IHasOrder)x).Order);
-        Items.Swap(info.IndexInZone, oldIndex);
-
+        
         StateHasChanged();
     }
 }

@@ -1,0 +1,55 @@
+﻿@page "/previewGameScores/{backUrl}"
+@layout PlayerLayout
+@using SQuiz.Client.Pages.Game.GameCoreComponents
+@using SQuiz.Shared.Dtos.Game
+@inject ISessionStorageService Storage
+
+<PreviewBase BackUrl="@BackUrl">
+    <LoadingWrapper WaitFor="_player">
+        <GameScoresComponent PlayerId="@_player?.Id" Scores="_scores" />
+    </LoadingWrapper>
+</PreviewBase>
+
+@code {
+    [Parameter]
+    public string? BackUrl { get; set; }
+
+    List<PlayerDto> _scores = new List<PlayerDto>()
+    {
+        new PlayerDto()
+        {
+            Id = "2",
+            Name = "2 regular player",
+            Points = 1900
+        },
+        new PlayerDto()
+        {
+            Id = "3",
+            Name = "3 regular player",
+            Points = 1500
+        },
+        new PlayerDto()
+        {
+            Id = "4",
+            Name = "4 regular player",
+            Points = 1200
+        },
+        new PlayerDto()
+        {
+            Id = "5",
+            Name = "5 regular player",
+            Points = 1000
+        }
+    };
+
+
+    PlayerDto? _player;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _player = await Storage.GetItemAsync<PlayerDto>(Constants.SessionStorageKey.PreviewScore);
+        _scores.Add(_player);
+
+        _scores = _scores.OrderByDescending(x => x.Points).ToList();
+    }
+}

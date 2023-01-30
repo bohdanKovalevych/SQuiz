@@ -9,6 +9,7 @@ using SQuiz.Shared.Dtos.Dashboards;
 using SQuiz.Shared.Dtos.Game;
 using SQuiz.Shared.Interfaces;
 using SQuiz.Shared.Models;
+using Constants = SQuiz.Client.Constants;
 
 namespace SQuiz.Server.Controllers
 {
@@ -51,10 +52,10 @@ namespace SQuiz.Server.Controllers
 
             var popularUsers = await baseQuery
                 .OrderByDescending(x => x.Players.Count)
-                .Select(x => x.StartedBy.Name)
+                .Select(x => x.StartedBy.Name ?? string.Empty)
                 .Distinct()
                 .Take(5)
-                .ToListAsync();
+                .ToListAsync() ?? new List<string>();
 
             var result = new NotAthorizedDashboardDto()
             {
@@ -89,20 +90,30 @@ namespace SQuiz.Server.Controllers
         [Authorize(Policies.PlayerInGame)]
         public async Task<IActionResult> SendAnswer(SendAnswerDto answerDto)
         {
-            var playerId = Request.Cookies["playerId"];
+            string playerId = string.Empty;
+            if (Request.Cookies[Constants.CookiesKey.PlayerId] is string notNullPlayerId)
+            {
+                playerId = notNullPlayerId;
+            }
+            else
+            {
+                return BadRequest();
+            }
 
             var isCorrect = answerDto.AnswerId != null && await _context.Questions
                 .AnyAsync(x => x.CorrectAnswerId == answerDto.AnswerId);
             var points = 0;
 
-            if (isCorrect)
-            {
-                var question = await _context.Questions
+            var questionQuery = _context.Questions
                     .AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.Answers
+                    .Where(x => x.Answers
                         .Any(x => x.Id == answerDto.AnswerId));
 
-                points = _pointsCounter.GetPoints(answerDto.TimeToSolve, question);
+            if (isCorrect && await questionQuery.FirstOrDefaultAsync() is Question question)
+            {
+                points = _pointsCounter.GetPoints(answerDto.TimeToSolve,
+                    question.AnsweringTime,
+                    question.Points);
             }
 
             var playerAnswer = new PlayerAnswer()
@@ -135,12 +146,12 @@ namespace SQuiz.Server.Controllers
         [Authorize(Policies.PlayerInGame)]
         public async Task<IActionResult> GetQuestion()
         {
-            var playerId = Request.Cookies["playerId"];
-            var lastQuestion = Request.Cookies["questionIndex"];
+            string playerId = Request?.Cookies[Constants.CookiesKey.PlayerId] ?? throw new ArgumentException();
+            string? lastQuestion = Request?.Cookies[Constants.CookiesKey.QuestionIndex];
 
             lastQuestion ??= "0";
 
-            var index = int.Parse(lastQuestion);
+            int index = int.Parse(lastQuestion);
 
             var question = await _context.Questions
                 .Include(x => x.Answers)
@@ -153,11 +164,11 @@ namespace SQuiz.Server.Controllers
             if (question == null)
             {
                 await ComputeAndSavePoints(playerId);
-                Response.Cookies.Delete("questionIndex");
+                Response.Cookies.Delete(Constants.CookiesKey.QuestionIndex);
                 return NoContent();
             }
 
-            Response.Cookies.Append("questionIndex", $"{index + 1}");
+            Response.Cookies.Append(Constants.CookiesKey.QuestionIndex, $"{index + 1}");
 
             question.Answers = question.Answers
                 .OrderBy(x => x.Order)
@@ -215,7 +226,7 @@ namespace SQuiz.Server.Controllers
                 return BadRequest(validationMessage);
             }
 
-            Response.Cookies.Append("playerId", playerId);
+            Response.Cookies.Append(Constants.CookiesKey.PlayerId, playerId);
 
             return Ok();
         }
@@ -252,7 +263,7 @@ namespace SQuiz.Server.Controllers
             _context.Players.Add(player);
 
             await _context.SaveChangesAsync();
-            Response.Cookies.Append("playerId", player.Id);
+            Response.Cookies.Append(Constants.CookiesKey.PlayerId, player.Id);
 
             return Ok();
         }

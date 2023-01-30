@@ -9,7 +9,7 @@
 
 @implements IDisposable
 
-<Steps Title="Play quiz" @ref="Steps">
+<Steps Title="Play quiz" @ref="Steps" Class="@Class">
     <SubHeaderContent>
         <p class="alert-danger">@ErrorMessage</p>
     </SubHeaderContent>
@@ -30,7 +30,10 @@
     public Steps? Steps { get; set; }
     public GameOptionDto? Game { get; set; }
     public string? ErrorMessage;
-
+    
+    [Parameter]
+    public string? Class { get; set; }
+    
     protected override void OnInitialized()
     {
         InitGameService.PlayerNameChosen += PlayerNameChosen;
@@ -46,14 +49,14 @@
         try {
             Game = await Http.Client.GetFromJsonAsync<GameOptionDto>($"Games/{code}");
             navigateToIndex = 1;
-            await SessionStorage.SetItemAsync("game", Game);
+            await SessionStorage.SetItemAsync(Constants.SessionStorageKey.Game, Game);
         }
         catch (Exception)
         {
             ErrorMessage = $"Game was not found by code {code}";
             Steps?.RemoveByIndex(1);
             Game = null;
-            await SessionStorage.RemoveItemAsync("game");
+            await SessionStorage.RemoveItemAsync(Constants.SessionStorageKey.Game);
 
             return;
         }
