@@ -3,48 +3,55 @@
 @inject HttpClient Http
 @inject NavigationManager Nav
 
-<div class="col-md-6 card">
-    <div class="card-header">
-        @if (GameOption != null)
-        {
-            <p>Edit game with id @GameOption.ShortId</p>
-        }
-        else
-        {
-            <p>Start a new game</p>
-        }
-        
-    </div>
-    <div class="card-body">
-        <p class="text-danger">@ErrorMessage</p>
-        <div class="input-group m-1">
-            <label class="m-1 form-label col-3">Choose quiz</label>
-            <select class="form-select" @bind=@Model.QuizId>
+<MudCard Elevation="20">
+    <MudCardHeader>
+        <MudPaper>
+            @if (GameOption != null)
+            {
+                <MudText Typo="Typo.subtitle1">Edit game with id @GameOption.ShortId</MudText>
+            }
+            else
+            {
+                <MudText Typo="Typo.subtitle1">Start a new game</MudText>
+            }
+        </MudPaper>
+    </MudCardHeader>
+    <MudCardContent >
+        <MudPaper Class="d-flex flex-column gap-2 pa-2">
+            @if (ErrorMessage != null)
+            {
+                <MudAlert Severity="Severity.Error">@ErrorMessage</MudAlert>
+            }
+            
+            <MudSelect Variant="Variant.Filled"
+                        T="string"
+                        @bind-Value="Model.QuizId"
+                        Label="Choose quiz">
                 @foreach (var quiz in QuizOptions)
                 {
-                    <option value="@quiz.Id">@quiz.Name</option>
+                    <MudSelectItem Value="@quiz.Id">@quiz.Name</MudSelectItem>
                 }
-            </select>
-        </div>
-        <div class="input-group m-1">
-            <label class="m-1 form-label col-3">Start Date</label>
-            <input class="form-control" type="date" @bind-value="Model.StartDate" />
-            <input class="form-control" type="time" @bind-value="StartTime" />
-        </div>
-        <div class="input-group m-1">
-            <label class="m-1 form-label col-3">End Date</label>
-            <input class="form-control" type="date" @bind-value="Model.EndDate" />
-            <input class="form-control" type="time" @bind-value="EndTime" />
-        </div>
-        <div class="m-1">
-            <button class="btn btn-primary" @onclick="StartGame">
+            </MudSelect>
+            <div class="d-flex flex-row gap-2">
+                <MudDatePicker Variant="Variant.Filled" Label="Date start" @bind-Date="StartDate" />
+                <MudTimePicker Variant="Variant.Filled" Label="Time start" @bind-Time="StartTime" />
+            </div>
+            <div class="d-flex flex-row gap-2">
+                <MudDatePicker Variant="Variant.Filled" Label="Date end" @bind-Date="EndDate" />
+                <MudTimePicker Variant="Variant.Filled" Label="Time end" @bind-Time="EndTime" />
+            </div>
+        </MudPaper>
+    </MudCardContent>
+    <MudCardActions>
+        <MudPaper>
+            <MudButton Variant="Variant.Filled" @onclick="StartGame">
                 @(GameOption != null
                     ? "Edit"
                     : "Start")
-            </button>
-        </div>
-    </div>
-</div>
+            </MudButton>
+        </MudPaper>
+    </MudCardActions>
+</MudCard>
 
 @code {
     [Parameter]
@@ -64,8 +71,10 @@
         EndDate = DateTime.Now.AddDays(1)
     };
 
-    public DateTimeOffset? StartTime = DateTimeOffset.Now.AddSeconds(0).AddMilliseconds(0);
-    public DateTimeOffset? EndTime = DateTimeOffset.Now.AddSeconds(0).AddMilliseconds(0);
+    public TimeSpan? StartTime = DateTime.Now.AddSeconds(0).AddMilliseconds(0).TimeOfDay;
+    public DateTime? StartDate = DateTime.Now;
+    public TimeSpan? EndTime = DateTime.Now.AddSeconds(0).AddMilliseconds(0).TimeOfDay;
+    public DateTime? EndDate = DateTime.Now;
 
     public async Task StartGame()
     {
@@ -77,8 +86,8 @@
             return;
         }
 
-        Model.StartDate = AddTimeToDate(Model.StartDate, StartTime);
-        Model.EndDate = AddTimeToDate(Model.EndDate, EndTime);
+        Model.StartDate = AddTimeToDate(StartDate, StartTime);
+        Model.EndDate = AddTimeToDate(EndDate, EndTime);
 
         var response = await Http.PutAsJsonAsync($"ManageGames/{Model.QuizId}", Model);
 
@@ -88,13 +97,13 @@
         }
     }
 
-    private DateTimeOffset? AddTimeToDate(DateTimeOffset? date, DateTimeOffset? time)
+    private DateTimeOffset? AddTimeToDate(DateTimeOffset? date, TimeSpan? time)
     {
-        if (time is DateTimeOffset notNullTime)
+        if (time is TimeSpan notNullTime)
         {
             return date?
-                .AddHours(notNullTime.Hour)
-                .AddMinutes(notNullTime.Minute)
+                .AddHours(notNullTime.Hours)
+                .AddMinutes(notNullTime.Minutes)
                 .AddSeconds(0)
                 .AddMilliseconds(0);
         }
@@ -115,8 +124,8 @@
             Model.Id = GameOption.Id;
             Model.EndDate = GameOption.EndDate;
             Model.StartDate = GameOption.StartDate;
-            StartTime = GameOption.StartDate;
-            EndTime = GameOption.EndDate;
+            StartTime = GameOption.StartDate?.TimeOfDay;
+            EndTime = GameOption.EndDate?.TimeOfDay;
         }
     }
 }

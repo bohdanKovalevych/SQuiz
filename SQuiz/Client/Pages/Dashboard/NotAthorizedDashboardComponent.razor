@@ -1,0 +1,102 @@
+﻿@using SQuiz.Client.Pages.Game.InitGameSteps
+@using SQuiz.Client.Services
+@using SQuiz.Shared.Dtos.Dashboards
+@using SQuiz.Shared.Dtos.Game
+@inject PublicClient Http
+
+<style>
+.parallax {
+    font-size: 25px;
+    position: relative;
+    width: 100%;
+    background-color: rgba(20, 160, 190, 0.6);
+    background-image: url("images/logo-squiz.png");
+    min-height: 200px;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+}
+
+    .parallax::after {
+        content: "";
+        left: 0;
+        top: 0;
+        position: absolute;
+        width: 100%;
+        background-image: url("images/clouds.png");
+        height: 100%;
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+        background-size: cover;
+        opacity: 0.5;
+        mix-blend-mode: color-dodge;
+        background-position: 20% -200px;
+    }
+</style>
+
+<MudGrid Justify="Justify.FlexStart" Class="d-flex align-content-stretch">
+    <MudItem xs="12" sm="12" md="12" lg="4">
+        <MudPaper Elevation="20" Class="mud-height-full">
+            <MudText Color="Color.Warning" Class="mud-height-full parallax text-center pt-1">.</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="5">
+        <MudPaper Elevation="20" Class="mud-height-full">
+            <InitGameComponent @ref="gameSteps" Class="mud-height-full"></InitGameComponent>
+        </MudPaper>
+    </MudItem>
+    <LoadingWrapper WaitFor="_dashboard">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="20" Class="d-flex mud-height-full flex-column pt-6 pb-4">
+                <MudIcon Icon="@Icons.Material.Filled.Quiz" Color="Color.Success" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+                <DashboardList Items="_dashboard.NewGames"
+                               Header="New Quizzes"
+                               AvatarLabel="x => x.ShortId.ToString()"
+                               Subtitle1="x => x.Name"
+                               Subtitle2=@(x => $"Starts: {x.EndDate:MM/dd}")
+                               SelectedValueChanged="OnSelectedGameChanged" />
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="20" Class="d-flex flex-column pt-6 pb-4 overflow-auto mud-height-full">
+                <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Success" Class="mx-4" Style="width:54px; height:54px"></MudIcon>
+                <DashboardList Items="_dashboard.PopularUsers"
+                               Header="Popular authors"
+                               AvatarLabel="_ => string.Empty"
+                               Subtitle1="x => x"
+                               Subtitle2="_ => string.Empty"
+                               SelectedValueChanged="_ => Task.CompletedTask" />
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="20" Class="d-flex flex-column pt-6 pb-4 overflow-auto mud-height-full">
+                <MudIcon Icon="@Icons.Material.Filled.Apps" Color="Color.Tertiary" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+                <DashboardList Items="_dashboard.PopularGames"
+                               Header="Popular Quizzes"
+                               AvatarLabel="x => x.ShortId.ToString()"
+                               Subtitle1="x => x.Name"
+                               Subtitle2=@(x => $"Is active: {x.IsActive}")
+                               SelectedValueChanged="OnSelectedGameChanged" />
+            </MudPaper>
+        </MudItem>
+    </LoadingWrapper>
+</MudGrid>
+
+@code {
+    InitGameComponent? gameSteps { get; set; }
+
+    NotAthorizedDashboardDto? _dashboard;
+
+    async Task OnSelectedGameChanged(GameOptionDto game)
+    {
+        if (gameSteps != null)
+        {
+            await gameSteps.GameCodeChosen(game.ShortId);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _dashboard = await Http.Client.GetFromJsonAsync<NotAthorizedDashboardDto>("Games");
+    }
+}

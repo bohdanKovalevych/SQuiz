@@ -2,19 +2,23 @@
 @inject NavigationManager Nav
 @inject IInitGameService InitGameService
 
-<div class="h-100 m-auto">
-    <div class="row">
-        <div class="col-2">
-            <span class="fs-5">Code</span>
-        </div>
-        <div class="col">
-            <input class="form-control-lg" type="number" @bind-value="shortId"/>
-        </div>
-        <div class="col-3">
-            <button class="btn btn-lg btn-primary" @onclick="PlayQuiz">Play Quiz</button>
-        </div>
-    </div>
-</div>
+<MudGrid Justify="Justify.Center">
+    <MudItem lg="6" md="9" sm="12" >
+        <MudPaper Elevation="0" Class="d-flex flex-column justify-space-between gap-9">
+            <MudNumericField 
+                @bind-Value="shortId" 
+                Margin="Margin.None"
+                Variant="Variant.Outlined" 
+                Label="Code" />
+            <MudButton
+                Size="Size.Large"
+                Variant="Variant.Filled" 
+                Color="Color.Primary" 
+                @onclick="PlayQuiz">Play Quiz</MudButton>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
 
 @code {
     public int? shortId;

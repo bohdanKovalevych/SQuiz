@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using SQuiz.Application.Interfaces;
+using SQuiz.Client;
+using SQuiz.Infrastructure.Interfaces;
 
 namespace SQuiz.Server.Application.Security.Authorization.Requirements
 {
@@ -17,7 +18,7 @@ namespace SQuiz.Server.Application.Security.Authorization.Requirements
 
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PlayerInGameRequirement requirement)
         {
-            if (_httpContext.HttpContext?.Request.Cookies["playerId"] is string playerId
+            if (_httpContext.HttpContext?.Request.Cookies[Constants.CookiesKey.PlayerId] is string playerId
                 && await _quizContext.Players
                 .Where(x => x.Id == playerId)
                 .Where(x => DateTime.Now >= x.QuizGame.DateStart)

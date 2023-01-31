@@ -1,74 +1,56 @@
 ﻿@using SQuiz.Client.Shared.Components
 @using SQuiz.Shared.Dtos.Quiz
 @using SQuiz.Shared.Extensions
+@inject ISessionStorageService Storage
+@inject NavigationManager Nav
 
 <StepItem Title="Review details" Order=@(Model.Questions.Count + 3)>
-    <div class="container">
-        <div class="list-group">
-            <div class="list-group-item">
-                <div class="row">
-                    <div class="col-3">
-                        Quiz Name:
-                    </div>
-                    <div class="col">
-                        @Model.Name
-                    </div>
-                </div>
-            </div>
-            <div class="list-group-item">
-                <div class="row">
-                    <div class="col-3">
-                        Quiz Description:
-                    </div>
-                    <div class="col">
-                        @Model.Description
-                    </div>
-                </div>
-            </div>
-            <div class="list-group-item">
-                <div class="row">
-                    <div class="col-3">
-                        Is public:
-                    </div>
-                    <div class="col">
-                        @(Model.IsPublic ? "Yes" : "No")
-                    </div>
-                </div>
-            </div>
-
-            @foreach(var (q, i) in Model.Questions.WithIndex())
-            {
-                <div class="list-group-item">
-                    <div class="row">
-                        <ValidationErrorMessage Model="Model" For=@($"Questions[{i}].QuestionText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
-                        <div class="col-12 m-1">
-                            <span class="alert alert-info">
-                                <span class="small">@(i + 1). </span>
-                                <span>@q.QuestionText</span>
-                            </span>
-                        </div>
-
-                        @foreach (var (a, j) in q.Answers.WithIndex())
-                        {
-                            <div class="m-3">
-                                <ValidationErrorMessage Model="Model" For=@($"Questions[{i}].Answers[{j}].AnswerText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
-                            </div>
-                            <div class="col-12 m-3">
-                                <span class="alert @(j == q.CorrectAnswerIndex ? "alert-success" : "alert-secondary")">
-                                    <span class="small">@((char)('a' + j)).</span>
-                                    <span>@a.AnswerText</span>
-                                </span>
-                            </div>
-                        }
-                    </div>
-                </div>
-            }
-
-        </div>
-        <div class="m-3 text-center">
-            <button class="btn btn-sm btn-primary" @onclick="Parent.Save">Save</button>
-        </div>
-    </div>
+    <MudFab
+        Class="ma-1"
+        Label="Preview all questions"
+        StartIcon="@Icons.Material.Filled.Preview"
+        @onclick="GoToPreview"/>
+    <MudGrid>
+        <MudItem >
+            <MudList Clickable>
+                <MudListSubheader>
+                    <MudPaper Class="pa-4">
+                        <MudText>Quiz Name: @Model.Name</MudText>
+                        <MudText>Quiz Description: @Model.Description</MudText>
+                        <MudText>Is public: @Model.IsPublic</MudText>
+                        <MudText>Number of questions: @Model.Questions.Count</MudText>
+                    </MudPaper>
+                </MudListSubheader>
+                @foreach(var q in Model.Questions.OrderBy(x => x.Order))
+                {
+                    <MudListItem >
+                        <ChildContent>
+                            <ValidationErrorMessage Model="Model" For=@($"Questions[{q.Order}].QuestionText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
+                            <span class="small">@(q.Order + 1). </span>
+                            <span>@q.QuestionText</span>    
+                        </ChildContent>
+                        <NestedList>
+                            @foreach (var a in q.Answers.OrderBy(x => x.Order))
+                            {
+                                <MudListItem>
+                                    <div class="m-3">
+                                        <ValidationErrorMessage Model="Model" For=@($"Questions[{q.Order}].Answers[{a.Order}].AnswerText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
+                                    </div>
+                                    <div class="col-12 m-3">
+                                        <span class="alert @(a.Order == q.CorrectAnswerIndex ? "green-text" : "")">
+                                            <span class="small">@((char)('a' + a.Order)).</span>
+                                            <span>@a.AnswerText</span>
+                                        </span>
+                                    </div>
+                                </MudListItem>
+                            }
+                        </NestedList>
+                    </MudListItem>
+                }
+            </MudList>
+        </MudItem>
+    </MudGrid>
+    <MudButton Variant="Variant.Filled" Class="ma-3" Color="Color.Primary" @onclick="Parent.Save">Save</MudButton>    
 </StepItem>
 
 @code {
@@ -78,4 +60,12 @@
     public EditQuizDto Model => Parent.Model;
 
     public EditQuizDto? InitialModel => Parent.InitialModel;
+
+    async Task GoToPreview()
+    {
+        await Parent.SaveCurrentState();
+
+        await Storage.SetItemAsync(Constants.SessionStorageKey.PreviewAllQuestions, Model);
+        Nav.NavigateTo($"previewAllQuestions/{Parent.GetBackUrl}");
+    }
 }

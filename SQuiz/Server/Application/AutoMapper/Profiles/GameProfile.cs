@@ -8,6 +8,12 @@ namespace SQuiz.Server.Application.AutoMapper.Profiles
     {
         public GameProfile()
         {
+            CreateMap<GameOptionDto, QuizGame>()
+                .ReverseMap()
+                .ForMember(x => x.Name, x => x.MapFrom(x => x.Quiz.Name))
+                .ForMember(x => x.EndDate, x => x.MapFrom(x => x.DateEnd))
+                .ForMember(x => x.StartDate, x => x.MapFrom(x => x.DateStart));
+
             CreateMap<GameQuestionDto, Question>()
                .ReverseMap();
 

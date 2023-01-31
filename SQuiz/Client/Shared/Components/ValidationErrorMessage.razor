@@ -2,17 +2,18 @@
 @using System.Linq.Expressions
 @typeparam T
 
-<p class="alert-danger">
-    @Message
-</p>
+@if (!string.IsNullOrEmpty(Message))
+{
+    <MudAlert Severity="Severity.Error">@Message</MudAlert>
+}
+
 
 @code {
     [Parameter]
     public T Model { get; set; }
 
     [Parameter]
-    public  string For { get; set; }
-
+    public string For { get; set; }
 
     [Parameter]
     public ValidationResult ValidationResult { get; set; }

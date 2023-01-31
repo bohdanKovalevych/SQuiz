@@ -1,0 +1,21 @@
+﻿@inject NavigationManager Nav
+
+<MudFab Size="Size.Small"
+        EndIcon="@Icons.Material.Filled.ArrowBack"
+        Label="Test mode. back to edit"
+        Style="position: absolute; top: 10px; left: 10px;"
+        @onclick="Back" />
+@ChildContent
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+    
+    [Parameter]
+    public string? BackUrl { get; set; }
+
+    void Back()
+    {
+        Nav.NavigateTo(BackUrl);
+    }
+}

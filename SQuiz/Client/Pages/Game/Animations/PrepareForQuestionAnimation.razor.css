@@ -1,0 +1,50 @@
+﻿.ready {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 200px;
+    color: white;
+    font-size: 40px;
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    opacity: 0;
+    animation-duration: 1s;
+}
+
+.animation > .ready-3 {
+    background-color: red;
+    animation-name: circle;
+    animation-delay: 0;
+}
+
+.animation > .ready-2 {
+    background-color: blue;
+    animation-name: circle;
+    animation-delay: 1s;
+}
+
+.animation > .ready-1 {
+    background-color: green;
+    animation-name: circle;
+    animation-delay: 2s;
+}
+
+.animation > .ready-start {
+    background-color: blueviolet;
+    animation-name: circle;
+    animation-delay: 3s;
+}
+
+@keyframes circle {
+    0% {
+        opacity: 1;
+        transform: scale(0.1);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

@@ -7,8 +7,6 @@ namespace SQuiz.Application.Interfaces
     public interface IQuizService
     {
         void AssignIdsToQuestionsAndAnswers(Quiz quiz, Action<IEntity> update, Action<IEntity> add);
-        void AssignOrderToQuestions(Quiz quiz);
-        void AssignOrderToAnswers(Quiz quiz);
         void SetCorrectAnswersFromModel(Quiz quiz, List<QuestionDto> modelQuestions);
         void SetCorrectAnswersFromEntity(Quiz quiz, List<QuestionDto> modelQuestions);
         void ReorderQuestions(Quiz quiz);

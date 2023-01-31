@@ -41,34 +41,15 @@ namespace SQuiz.Application.Services
             }
         }
 
-        public void AssignOrderToQuestions(Quiz quiz)
-        {
-            foreach (var (question, index) in quiz.Questions.WithIndex())
-            {
-                question.Order = index;
-            }
-        }
-
-        public void AssignOrderToAnswers(Quiz quiz)
-        {
-            foreach (var question in quiz.Questions)
-            {
-                foreach (var (answer, index) in question.Answers.WithIndex())
-                {
-                    answer.Order = index;
-                }
-            }
-        }
-
         public void SetCorrectAnswersFromModel(Quiz quiz, List<QuestionDto> modelQuestions)
         {
             foreach (var (question, questionIndex) in quiz.Questions.WithIndex())
             {
                 var questionModel = modelQuestions[questionIndex];
-                var answerIndex = questionModel.CorrectAnswerIndex;
+                int answerIndex = questionModel.CorrectAnswerIndex;
 
                 question.CorrectAnswerId = question.Answers
-                    .Where((x, i) => i == answerIndex)
+                    .Where(x => x.Order == answerIndex)
                     .FirstOrDefault()?.Id;
             }
         }
@@ -78,7 +59,7 @@ namespace SQuiz.Application.Services
             foreach (var (question, questionIndex) in quiz.Questions.WithIndex())
             {
                 var questionModel = modelQuestions[questionIndex];
-                var index = question.Answers
+                int? index = question.Answers
                     .FirstOrDefault(x => x.Id == question.CorrectAnswerId)
                     ?.Order;
 

@@ -8,32 +8,29 @@
 @inject IInitGameService InitGameService
 
 <LoadingWrapper WaitFor="Game">
-    <div class="container card-group">
-        <div class="card">
-            <div class="card-header">
+    <MudPaper>
+        <MudCard>
+            <MudCardHeader >
                 Welcome to "@Game?.Name" game
-            </div>
-            <div class="card-body">
-                <div>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudPaper>
                     @if (ExistingPlayerName != null)
                     {
-                        <div class="alert alert-info">
+                        <MudText Color="Color.Info">
                             Are you '@(ExistingPlayerName)'? If yes, you may
-                            <button class="btn btn-success" @onclick="JoinAs">rejoin</button>
-                        </div>
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" @onclick="JoinAs">rejoin</MudButton>
+                        </MudText>
                     }
-                    <div class="alert-danger">@ErrorMessage</div>
-                    <div class="input-group">
-                        <label class="m-1">To join write your name</label>
-                        <input class="form-control m-1" type="text" @bind-value="Name"/>
-                    </div>
-                </div>
-            </div>
-            <div class="card-footer">
-                <button class="btn btn-primary m-1" @onclick="JoinGame">Join</button>
-            </div>
-        </div>
-    </div>
+                    <MudText Color="Color.Error">@ErrorMessage</MudText>
+                    <MudTextField Label="To join write your name" @bind-Value="Name"/>
+                </MudPaper>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="JoinGame">Join</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudPaper>
 </LoadingWrapper>
 
 @code {
@@ -57,7 +54,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var playerId = (await Cookies.GetAsync("playerId"))?.Value;
+        var playerId = (await Cookies.GetAsync(Constants.CookiesKey.PlayerId))?.Value;
 
         if (playerId == null)
         {

@@ -31,7 +31,7 @@ namespace SQuiz.Server.Controllers
         [HttpGet]
         public async Task<IActionResult> GetQuizzes()
         {
-            var authorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            string authorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var quizzes = await _quizContext.Quizzes.WithAuthor(authorId)
                 .Select(x => new QuizOptionDto()
                 {
@@ -121,9 +121,6 @@ namespace SQuiz.Server.Controllers
             _mapper.Map(model, quiz);
             quiz.DateUpdated = DateTime.Now;
 
-            _quizService.AssignOrderToQuestions(quiz);
-            _quizService.AssignOrderToAnswers(quiz);
-
             _quizService.AssignIdsToQuestionsAndAnswers(quiz,
                 x => _quizContext.Entry(x).State = EntityState.Modified,
                 x => _quizContext.Entry(x).State = EntityState.Added);
@@ -142,7 +139,7 @@ namespace SQuiz.Server.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateQuiz(EditQuizDto quizDto)
         {
-            var userid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            string userid = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var quiz = _mapper.Map<Quiz>(quizDto);
 
             quiz.Id = Guid.NewGuid().ToString();
@@ -152,8 +149,6 @@ namespace SQuiz.Server.Controllers
                 x => _quizContext.Entry(x).State = EntityState.Modified,
                 x => _quizContext.Entry(x).State = EntityState.Added);
 
-            _quizService.AssignOrderToQuestions(quiz);
-            _quizService.AssignOrderToAnswers(quiz);
             _quizContext.Quizzes.Add(quiz);
 
             await _quizContext.SaveChangesAsync();
