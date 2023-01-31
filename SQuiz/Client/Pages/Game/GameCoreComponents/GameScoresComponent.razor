@@ -1,0 +1,38 @@
+﻿@using SQuiz.Shared.Dtos.Game
+@using System.Net
+@using SQuiz.Shared.Extensions
+
+@inject NavigationManager Nav
+
+<div class="alert-danger">@ErrorMessage</div>
+<div class="container game-scores-container">
+    <LoadingWrapper WaitFor="Scores">
+        <MudList Clickable>
+            <MudListSubheader>
+                Final scores are:
+            </MudListSubheader>
+
+            @foreach (var (player, i) in Scores.WithIndex())
+            {
+                <MudListItem 
+                    Class="@(player.Id == PlayerId ? "green-text" : "")">
+                    <MudAvatar>@($"{i + 1}")</MudAvatar>
+                    @player.Name @player.Points
+                </MudListItem>
+                <MudDivider DividerType="DividerType.Inset"/>
+            }
+        </MudList>
+        <a class="btn btn-secondary" href="/">Back to main</a>
+    </LoadingWrapper>
+</div>
+
+@code {
+    [Parameter]
+    public string? PlayerId { get; set; }
+
+    [Parameter]
+    public List<PlayerDto>? Scores { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+}

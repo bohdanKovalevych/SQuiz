@@ -1,128 +1,50 @@
 ﻿@page "/play"
 @layout PlayerLayout
 @using SQuiz.Client.Interfaces
+@using SQuiz.Client.Pages.Game.GameCoreComponents
 @using SQuiz.Client.Services
 @using SQuiz.Shared.Dtos.Game
 @using SQuiz.Shared.Extensions
 @using System.Net
 
 @implements IDisposable
-@inject ICookieStoreService CookieStoreService
-@inject ISessionStorageService SessionStorage
 @inject PublicClient Http
 @inject NavigationManager Nav
 @inject IPlayGameService PlayGameService
 
-<LoadingWrapper WaitFor="Question">
-    <MudCard>
-        <MudCardHeader>
-            <div>
-                @(Question?.Order + 1). @Question?.QuestionText
-            </div>
-        </MudCardHeader>
-        <MudCardContent>
-            <MudGrid>
-                @foreach (var (answer, index) in Question?.Answers.WithIndex()
-                ?? new List<GameAnswerDto>().WithIndex())
-                {
-                    var v = (char)('a' + index);
-                    
-                    var color = Enum.IsDefined(typeof(Color), index + 1)
-                    ? (Color)index + 1
-                    : Color.Default;
-                    <MudItem>
-                        <MudFab @onclick=@(() => SendAnswer(answer))
-                            Label=@($"{v}. {answer.AnswerText}")
-                            Color="Color.Primary"
-                            Class=@($"pa-10 {VariantColors[index % VariantColors.Count]}")/>
-                    </MudItem>
-                }
-            </MudGrid>
-            
-        </MudCardContent>
-        <MudCardActions>
-            <MudProgressLinear Class="w-100" Max="@MaxTime" Value="@ElapsedTime" />
-            <div>
-                <MudIcon Icon="@Icons.Material.Filled.Timer"/>
-                @ElapsedTime.ToString("N1") seconds left
-            </div>
-        </MudCardActions>
-    </MudCard>
-</LoadingWrapper>
+<PlayGameComponent GetQuestionDelegate="GetQuestion"/>
+
 
 @code {
-    public GameQuestionDto? Question;
-    public double ElapsedTime;
-    public double MaxTime;
-    public List<string> VariantColors = new List<string>()
+    public async Task<GameQuestionDto?> GetQuestion()
     {
-        "green",
-        "red",
-        "blue",
-        "yellow darken-3",
-        "red lighten-2",
-        "pink accent-2",
-        "deep-purple",
-        "teal",
-        "amber"
-    };
-    public async Task GetQuestion()
-    {
-        Question = null;
-        StateHasChanged();
         var response = await Http.Client.GetAsync("Games/questions");
 
         if (response.StatusCode == HttpStatusCode.NoContent)
         {
             Nav.NavigateTo("/gameScores");
-            return;
+            return null;
         }
 
-        Question = await response.Content.ReadFromJsonAsync<GameQuestionDto>();
-
-        PlayGameService.InitQuestionAndStartTimer(Question);
-        MaxTime = PlayGameService.CurrentMaxTime;
-        StateHasChanged();
+        var question = await response.Content.ReadFromJsonAsync<GameQuestionDto>();
+        return question;
     }
 
-
-    public async Task SendAnswer(GameAnswerDto answer)
+    async Task OnAnswered(SendAnswerDto answer)
     {
-        await PlayGameService.SendAnswer(answer.Id);
-        await GetQuestion();
-    }
-
-    public void OnTimeChanged(double time)
-    {
-        ElapsedTime = time;
-        StateHasChanged();
-    }
-
-    public async Task OnTimeEnd()
-    {
-        ElapsedTime = 0.0;
-        StateHasChanged();
-        await GetQuestion();
-    }
-
-    public async Task OnAnswered(SendAnswerDto model)
-    {
-        await Http.Client.PostAsJsonAsync("Games/answers", model);
-    }
-
-    protected override async Task OnInitializedAsync()
-    {
-        PlayGameService.OnTimeChanged += OnTimeChanged;
-        PlayGameService.OnTimeEnd += OnTimeEnd;
-        PlayGameService.OnAnswered += OnAnswered;
+        var response = await Http.Client.PostAsJsonAsync("Games/answers", answer);
+        var points = await response.Content.ReadFromJsonAsync<ReceivedPointsDto>();
         
-        await GetQuestion();
+        PlayGameService.ReceivePoints(points);
+    }
+
+    protected override void OnInitialized()
+    {
+        PlayGameService.OnAnswered += OnAnswered;
     }
 
     public void Dispose()
     {
-        PlayGameService.OnTimeChanged -= OnTimeChanged;
-        PlayGameService.OnTimeEnd -= OnTimeEnd;
         PlayGameService.OnAnswered -= OnAnswered;
     }
 }

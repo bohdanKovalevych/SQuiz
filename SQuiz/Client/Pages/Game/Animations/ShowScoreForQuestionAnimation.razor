@@ -1,0 +1,43 @@
+﻿@using SQuiz.Client.Interfaces
+@using SQuiz.Shared.Dtos.Game
+@inject IPlayGameService PlayGameService
+
+<QuizAnimationBase IsActive="_isActive" AnimationDuration="3">
+    @if (_points == 0)
+    {
+        <div class="points points-oh-no">Oh no</div>
+        <div class="points points-score">You got 0 points</div>
+    }
+    else
+    {
+        <div class="points points-oh-yes">Good</div>
+        <div class="points points-score">You got @_points points</div>
+    }
+</QuizAnimationBase>
+
+@code {
+    bool _isActive;
+    int _points;
+    private void OnStartPreparing()
+    {
+        TriggerAnimation(false);
+    }
+
+    private void OnReceivedPoints(ReceivedPointsDto points)
+    {
+        _points = points.CurrentPoints;
+        TriggerAnimation(true);
+    }
+
+    private void TriggerAnimation(bool isActive)
+    {
+        _isActive = isActive;
+        StateHasChanged();
+    }
+
+    protected override void OnInitialized()
+    {
+        PlayGameService.OnStartPreparing += OnStartPreparing;
+        PlayGameService.OnReceivedPoints += OnReceivedPoints;
+    }
+}

@@ -4,12 +4,20 @@ namespace SQuiz.Client.Interfaces
 {
     public interface IPlayGameService
     {
-        event Func<Task> OnTimeEnd;
-        event Func<SendAnswerDto, Task> OnAnswered;
-        event Action<double> OnTimeChanged;
         double CurrentMaxTime { get; }
-        void InitQuestionAndStartTimer(GameQuestionDto questionDto);
-
+        void InitQuestion(GameQuestionDto questionDto);
+        void StartTimer();
+        void DelayToPrepareForQuestion();
+        void ReceivePoints(ReceivedPointsDto points);
+        void EndQuiz();
         Task SendAnswer(string AnswerId);
+        
+        event Action<ReceivedPointsDto>? OnReceivedPoints;
+        event Action? OnStartPreparing;
+        event Action? OnPrepared;
+        event Func<Task>? OnTimeEnd;
+        event Func<Task>? OnQuizEnded;
+        event Func<SendAnswerDto, Task>? OnAnswered;
+        event Action<double>? OnTimeChanged;
     }
 }

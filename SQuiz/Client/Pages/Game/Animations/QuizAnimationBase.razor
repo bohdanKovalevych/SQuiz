@@ -1,0 +1,16 @@
+﻿<div class="@AnimationClass" style="animation-duration: @(AnimationDuration)s;">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public bool IsActive { get; set; }
+
+    [Parameter]
+    public double AnimationDuration { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    string AnimationClass => IsActive ? "animation" : string.Empty;
+}

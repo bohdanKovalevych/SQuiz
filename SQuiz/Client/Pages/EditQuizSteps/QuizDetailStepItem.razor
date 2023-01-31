@@ -1,34 +1,49 @@
-﻿@using SQuiz.Client.Shared.Components
+﻿@using SQuiz.Client.Pages.PreviewQuiz
+@using SQuiz.Client.Shared.Components
+@using SQuiz.Shared.Dtos.Game
 @using SQuiz.Shared.Dtos.Quiz
+@inject NavigationManager Nav
+@inject ISessionStorageService Storage
+
 <StepItem Title="Quiz" Order="0">
-        <div class="pa-2">
-            <ValidationErrorMessage Model="Parent.Model" For="Name" ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
-            <MudTextField
-                T="string"
-                Variant="Variant.Outlined"
-                Label="Name for Quiz *"
-                Class="pt-2 pb-2"
-                @bind-Text="Model.Name"/>
-            <MudTextField
-                T="string"
-                Variant="Variant.Outlined"
-                Label="Description"
-                Class="pt-2 pb-2"
-                Lines="4"
-                @bind-Text="Model.Description"/>
-            <MudCheckBox Label="Is public"
-                T="bool"
-                Class="pt-2 pb-2"
-                Color="Color.Primary"
-                @bind-Checked="Model.IsPublic"/>
-            <MudButton 
-                Color="Color.Primary"
-                Variant="Variant.Filled"
-                Class="mx-auto" 
-                @onclick="Parent.Save">
-                Save and configure next steps later
-            </MudButton>
-        </div>
+    <MudFab StartIcon="@Icons.Material.Filled.Preview"
+            Size="Size.Small"
+            Class="ma-1"
+            Label="Preview initial game page"
+            @onclick="GoToPreviewQuiz" />
+    <MudFab StartIcon="@Icons.Material.Filled.Preview"
+            Class="ma-1"
+            Size="Size.Small"
+            Label="Preview game scores"
+            @onclick="GoToPreviewScores" />
+    <div class="pa-2">
+        <ValidationErrorMessage Model="Parent.Model" For="Name" ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
+        <MudTextField
+            T="string"
+            Variant="Variant.Outlined"
+            Label="Name for Quiz *"
+            Class="pt-2 pb-2"
+            @bind-Text="Model.Name"/>
+        <MudTextField
+            T="string"
+            Variant="Variant.Outlined"
+            Label="Description"
+            Class="pt-2 pb-2"
+            Lines="4"
+            @bind-Text="Model.Description"/>
+        <MudCheckBox Label="Is public"
+            T="bool"
+            Class="pt-2 pb-2"
+            Color="Color.Primary"
+            @bind-Checked="Model.IsPublic"/>
+        <MudButton 
+            Color="Color.Primary"
+            Variant="Variant.Filled"
+            Class="mx-auto" 
+            @onclick="Parent.Save">
+            Save and configure next steps later
+        </MudButton>
+    </div>
 </StepItem>
 
 @code {
@@ -38,4 +53,33 @@
     public EditQuizDto Model => Parent.Model;
 
     public EditQuizDto? InitialModel => Parent.InitialModel;
+
+    async Task GoToPreviewQuiz()
+    {
+        await Parent.SaveCurrentState();
+        var game = new GameOptionDto()
+        {
+            QuestionCount = Model.Questions.Count,
+            Name = Model.Name
+        };
+        await Storage.SetItemAsync(Constants.SessionStorageKey.PreviewGame, game);
+
+        Nav.NavigateTo($"previewGame/{Parent.GetBackUrl}");
+    }
+
+    async Task GoToPreviewScores()
+    {
+        await Parent.SaveCurrentState();
+
+        var score = new PlayerDto()
+        {
+            Name = "your account name",
+            Id = "1",
+            Points = 3000
+        };
+
+        await Storage.SetItemAsync(Constants.SessionStorageKey.PreviewScore, score);
+
+        Nav.NavigateTo($"/previewGameScores/{Parent.GetBackUrl}");
+    }
 }

@@ -1,7 +1,9 @@
 ﻿@using FluentValidation.Results
 @using SQuiz.Client.Shared.Components
 @using SQuiz.Shared.Dtos.Quiz
+@using SQuiz.Shared.Models
 @inject NavigationManager NavigationManager
+@inject ISessionStorageService Session
 
 <Steps Title="@StepsTitle" @ref="Steps">
     <SubHeaderContent>
@@ -14,7 +16,7 @@
         <CascadingValue Value="this">
             <QuizDetailStepItem></QuizDetailStepItem>
             <ManageQuestionsStepItem></ManageQuestionsStepItem>
-            @foreach (var question in Model.Questions)
+            @foreach (var question in Model.Questions.OrderBy(x => x.Order))
             {
                 <QuizQuestionStepItem Question="question"></QuizQuestionStepItem>
             }
@@ -24,9 +26,15 @@
 </Steps>
 
 @code {
+    private bool _touched = false;
+
     public Steps? Steps { get; set; }
 
     public EditQuizDto Model { get; set; } = new EditQuizDto();
+
+    public string GetBackUrl => Mode == QuizSteps.MODE.CREATE
+        ? Uri.EscapeDataString("createQuiz")
+        : Uri.EscapeDataString($"manage-quiz/{Model.Id}?edit=true");
 
     private string StepsTitle => Mode == MODE.CREATE ? "Create Quiz" : "Edit Quiz";
     private string? AfterSubmitErrorMessage { get; set; }
@@ -57,13 +65,25 @@
         StateHasChanged();
     }
 
-    public async Task Save()
+    public void Validate()
     {
+        if (!_touched)
+        {
+            return;
+        }
+
+        Model.Questions.Sort((a, b) => a.Order - b.Order);
+        Model.Questions.ForEach(x => x.Answers.Sort((a, b) => a.Order - b.Order));
         ValidationResult = ValidateHandler(Model);
         AfterSubmitErrorMessage = ValidationResult.IsValid
             ? string.Empty
             : "There are some validation errors";
+    }
 
+    public async Task Save()
+    {
+        _touched = true;
+        Validate();
         if (ValidationResult != null && !ValidationResult.IsValid) 
         {
             return;
@@ -75,6 +95,39 @@
         {
             NavigationManager.NavigateTo(NavigationManager.BaseUri, false);
         }
+    }
+
+    private async Task Restore()
+    {
+        var state = await Session.GetItemAsync<QuizStepsState>(Constants.SessionStorageKey.QuizStepsState + Mode);
+
+        if (state != null)
+        {
+            await Session.RemoveItemAsync(Constants.SessionStorageKey.QuizStepsState + Mode);
+            Model = state.Model;
+            InitialModel = state.InitialModel;
+            Steps?.NavigateTo(state.CurrentStepIndex);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Restore();
+        }
+    }
+
+    public async Task SaveCurrentState()
+    {
+        var state = new QuizStepsState()
+        {
+            CurrentStepIndex = Steps?.ActiveStepItem.Index ?? 0,
+            Model = Model,
+            InitialModel = InitialModel
+        };
+
+        await Session.SetItemAsync(Constants.SessionStorageKey.QuizStepsState + Mode, state);
     }
 
     protected override void OnInitialized()
@@ -93,5 +146,12 @@
     {
         CREATE,
         EDIT
+    }
+
+    public record QuizStepsState
+    {
+        public int CurrentStepIndex { get; set; }
+        public EditQuizDto? InitialModel { get; set; }
+        public EditQuizDto  Model { get; set; }
     }
 }

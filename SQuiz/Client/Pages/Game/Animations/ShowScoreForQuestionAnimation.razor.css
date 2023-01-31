@@ -1,0 +1,47 @@
+﻿.points {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+    text-align: center;
+    color: white;
+    font-size: 40px;
+    width: 200px;
+    height: 150px;
+    padding: 20px;
+    position: absolute;
+    opacity: 0;
+    animation-duration: 1s;
+}
+
+.animation > .points-oh-no {
+    background-color: red;
+    animation-name: scale-animation;
+    animation-delay: 0;
+}
+
+.animation > .points-oh-yes {
+    background-color: lightgreen;
+    animation-name: scale-animation;
+    animation-delay: 0;
+}
+
+.animation > .points-score {
+    background-color: #29B6F6;
+    animation-name: scale-animation;
+    animation-duration: 2s;
+    animation-delay: 1s;
+}
+
+@keyframes scale-animation {
+    0% {
+        opacity: 1;
+        transform: scale(0.1);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

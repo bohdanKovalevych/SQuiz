@@ -54,7 +54,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var playerId = (await Cookies.GetAsync("playerId"))?.Value;
+        var playerId = (await Cookies.GetAsync(Constants.CookiesKey.PlayerId))?.Value;
 
         if (playerId == null)
         {

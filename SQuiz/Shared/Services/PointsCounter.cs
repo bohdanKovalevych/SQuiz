@@ -5,11 +5,8 @@ namespace SQuiz.Shared.Services
 {
     public class PointsCounter : IPointsCounter
     {
-        public int GetPoints(TimeSpan timeToCount, Question question)
+        public int GetPoints(TimeSpan timeToCount, Question.ANSWERING_TIME time, Question.POINTS points)
         {
-            var time = question.AnsweringTime;
-            var points = question.Points;
-
             var bonusMultiplier = points switch
             {
                 Question.POINTS.Double => 2000,

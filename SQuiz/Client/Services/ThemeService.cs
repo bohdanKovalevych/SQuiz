@@ -17,9 +17,9 @@ namespace SQuiz.Client.Services
         public event Func<bool, Task> OnDarkModeChanged;
         public async Task InitializeAsync()
         {
-            var exists = await _session.ContainKeyAsync("isDarkMode");
+            var exists = await _session.ContainKeyAsync(Constants.SessionStorageKey.IsDarkMode);
             IsDarkMode = exists 
-                && await _session.GetItemAsync<bool>("isDarkMode");
+                && await _session.GetItemAsync<bool>(Constants.SessionStorageKey.IsDarkMode);
         }
 
         public async Task ChangeDarkMode(bool isDarkMode)
@@ -28,7 +28,7 @@ namespace SQuiz.Client.Services
             {
                 await OnDarkModeChanged.Invoke(isDarkMode);
             }
-            await _session.SetItemAsync("isDarkMode", isDarkMode);
+            await _session.SetItemAsync(Constants.SessionStorageKey.IsDarkMode, isDarkMode);
 
             IsDarkMode = isDarkMode;
         }
