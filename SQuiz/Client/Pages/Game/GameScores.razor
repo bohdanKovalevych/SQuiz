@@ -2,53 +2,43 @@
 @layout PlayerLayout
 
 @using SQuiz.Client.Interfaces
+@using SQuiz.Client.Pages.Game.GameCoreComponents
 @using SQuiz.Client.Services
 @using SQuiz.Shared.Dtos.Game
-@using SQuiz.Shared.Extensions
-@using System.Net
 
 @inject ICookieStoreService CookieStoreService
 @inject ISessionStorageService SessionStorage
 @inject PublicClient Http
 @inject NavigationManager Nav
 
-<div class="alert-danger">@ErrorMessage</div>
-<div class="container game-scores-container">
-    <LoadingWrapper WaitFor="Scores">
-        Final scores are:
-        <ol>
-            @foreach (var player in Scores)
-            {
-                <li>@player.Name @player.Points</li>
-            }
-        </ol>
-        <a class="btn btn-secondary" href="/">Back to main</a>
-    </LoadingWrapper>
-</div>
+<GameScoresComponent
+    ErrorMessage="@_errorMessage"
+    PlayerId="@_playerId"
+    Scores="@_scores"/>
 
 @code {
-    public string? PlayerId { get; set; }
-    public List<PlayerDto>? Scores { get; set; }
-
-    public string? ErrorMessage { get; set; }
+    string? _playerId;
+    List<PlayerDto>? _scores;
+    string? _errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        PlayerId = (await CookieStoreService.GetAsync(Constants.CookiesKey.PlayerId))?.Value;
+        _playerId = (await CookieStoreService.GetAsync(Constants.CookiesKey.PlayerId))?.Value;
         
-        if (PlayerId == null)
+        if (_playerId == null)
         {
             Nav.NavigateTo(Nav.BaseUri);
             return;
         }
 
-        var response = await Http.Client.GetAsync($"Games/scores/{PlayerId}");
+        var response = await Http.Client.GetAsync($"Games/scores/{_playerId}");
+        
         if (!response.IsSuccessStatusCode)
         {
-            ErrorMessage = await response.Content.ReadAsStringAsync();
+            _errorMessage = await response.Content.ReadAsStringAsync();
             return;
         }
 
-        Scores = await response.Content.ReadFromJsonAsync<List<PlayerDto>>();
+        _scores = await response.Content.ReadFromJsonAsync<List<PlayerDto>>();
     }
 }

@@ -35,12 +35,4 @@
 
     [Parameter]
     public string? ErrorMessage { get; set; }
-
-    protected override void OnInitialized()
-    {
-        if (PlayerId == null)
-        {
-            Nav.NavigateTo(Nav.BaseUri);
-        }
-    }
 }

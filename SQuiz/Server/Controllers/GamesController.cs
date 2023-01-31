@@ -90,30 +90,17 @@ namespace SQuiz.Server.Controllers
         [Authorize(Policies.PlayerInGame)]
         public async Task<IActionResult> SendAnswer(SendAnswerDto answerDto)
         {
-            string playerId = string.Empty;
-            if (Request.Cookies[Constants.CookiesKey.PlayerId] is string notNullPlayerId)
-            {
-                playerId = notNullPlayerId;
-            }
-            else
-            {
-                return BadRequest();
-            }
-
-            var isCorrect = answerDto.AnswerId != null && await _context.Questions
+            string? playerId = Request.Cookies[Constants.CookiesKey.PlayerId];
+            bool isCorrect = answerDto.AnswerId != null && await _context.Questions
                 .AnyAsync(x => x.CorrectAnswerId == answerDto.AnswerId);
-            var points = 0;
-
-            var questionQuery = _context.Questions
+            int points = 0;
+            var question = await _context.Questions
                     .AsNoTracking()
-                    .Where(x => x.Answers
-                        .Any(x => x.Id == answerDto.AnswerId));
+                    .FirstOrDefaultAsync(x => x.Answers.Any(x => x.Id == answerDto.AnswerId));
 
-            if (isCorrect && await questionQuery.FirstOrDefaultAsync() is Question question)
+            if (isCorrect)
             {
-                points = _pointsCounter.GetPoints(answerDto.TimeToSolve,
-                    question.AnsweringTime,
-                    question.Points);
+                points = _pointsCounter.GetPoints(answerDto.TimeToSolve, question.AnsweringTime, question.Points);
             }
 
             var playerAnswer = new PlayerAnswer()
@@ -127,7 +114,15 @@ namespace SQuiz.Server.Controllers
             _context.PlayerAnswers.Add(playerAnswer);
             await _context.SaveChangesAsync();
 
-            return Ok();
+            var receivedPoints = new ReceivedPointsDto()
+            {
+                CorrectAnswerId = question?.CorrectAnswerId,
+                CurrentPoints = points,
+                SelectedAnswerId = answerDto.AnswerId,
+                TotalPoints = await ComputePoints(playerId)
+            };
+
+            return Ok(receivedPoints);
         }
 
         [HttpGet("scores/{playerId}")]
@@ -182,7 +177,6 @@ namespace SQuiz.Server.Controllers
         private async Task ComputeAndSavePoints(string playerId)
         {
             var player = await _context.Players
-                .Include(x => x.PlayerAnswers)
                 .FirstOrDefaultAsync(x => x.Id == playerId);
 
             if (player == null)
@@ -190,9 +184,24 @@ namespace SQuiz.Server.Controllers
                 return;
             }
 
-            player.Points = player.PlayerAnswers.Sum(x => x.Points);
-
+            player.Points = await ComputePoints(playerId);
             await _context.SaveChangesAsync();
+        }
+
+        private async Task<int> ComputePoints(string playerId)
+        {
+            var player = await _context.Players
+                .Include(x => x.PlayerAnswers)
+                .FirstOrDefaultAsync(x => x.Id == playerId);
+
+            if (player == null)
+            {
+                return 0;
+            }
+
+            int result = player.PlayerAnswers.Sum(x => x.Points);
+
+            return result;
         }
 
         [HttpGet("players/{id}")]
