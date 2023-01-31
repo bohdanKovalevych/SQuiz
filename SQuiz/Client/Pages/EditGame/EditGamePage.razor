@@ -14,12 +14,12 @@
 <LoadingWrapper WaitFor="QuizOptions">
     @if (ShowEdit)
     {
-        <button class="btn btn-link" @onclick="Hide">Hide</button>
+        <MudLink @onclick="Hide">Hide</MudLink>
         <UpdateGame QuizOptions="QuizOptions" GameOption="GameOption" OnSubmitted="OnSubmited"></UpdateGame>
     }
     else
     {
-        <button class="btn btn-link" @onclick="StartNewGame">Start new game</button>
+        <MudLink @onclick="StartNewGame">Start new game</MudLink>
     }
 </LoadingWrapper>
 
@@ -27,7 +27,7 @@
     <p>
         <h3>My games</h3>
     </p>
-    <div class="list-group">
+    <MudList>
         
         @if (GameOptions?.Count == 0)
         {
@@ -38,14 +38,16 @@
 
         @foreach(var game in GameOptions)
         {
-            <div class="list-group-item">
+            <MudListItem>
                 <div class="row">
                     <div class="col">
-                        <button class="m-1 btn btn-outline-info oi oi-pencil"
-                                @onclick=@(() => EditGame(game))></button>
-                        <button class="m-1 btn btn-light oi oi-share-boxed"
-                                @onclick=@(() => CopyLinkToGame(game.ShortId))></button>
-                        @game.Name
+                        <MudButtonGroup Variant="Variant.Filled">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                @onclick=@(() => EditGame(game))/>
+                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                @onclick=@(() => CopyLinkToGame(game.ShortId))/>
+                        </MudButtonGroup>
+                                @game.Name
                     </div>
                     <div class="col">
                         Code @game.ShortId
@@ -57,9 +59,10 @@
                         Ends @game.EndDate
                     </div>
                 </div>
-            </div>
+            </MudListItem>
+            <MudDivider/>
         }
-    </div>
+    </MudList>
 </LoadingWrapper>
 
 @code {

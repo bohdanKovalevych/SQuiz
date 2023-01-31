@@ -4,9 +4,9 @@
     <div>
         <p><h4>@Title</h4></p>
         @ChildContent
-        <div>
-            <button @onclick="GoPrev" class="btn btn-sm btn-outline-secondary m-1" disabled="@(!ShowPrev)">Previous Step</button>
-            <button @onclick="GoNext" class="btn btn-sm btn-outline-secondary float-end m-1" disabled="@(!ShowNext)">Next Step</button>
+        <div style="margin-top: 20px;">
+            <MudFab @onclick="GoPrev" Size="Size.Small" StartIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" Disabled="@(!ShowPrev)"/>
+            <MudFab @onclick="GoNext" Size="Size.Small" StartIcon="@Icons.Material.Filled.ArrowForward" Style="float: right;" Disabled="@(!ShowNext)"/>
         </div>
     </div>
 }
@@ -48,5 +48,4 @@
             Parent.AddStepItem(this);
         }
     }
-
 }

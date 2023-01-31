@@ -1,0 +1,133 @@
+﻿@using SQuiz.Client.Pages.Game.InitGameSteps
+@using SQuiz.Client.Services
+@using SQuiz.Shared.Dtos.Dashboards
+@using SQuiz.Shared.Dtos.Game
+@inject PublicClient Http
+<style>
+    .parallax {
+        font-size: 25px; 
+        position: relative;
+        width: 100%;
+        background-color: rgba(20, 160, 190, 0.6);
+        background-image: url("images/logo-squiz.png");
+        min-height: 200px;
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position: center;
+    }
+
+    .parallax::after {
+        content: "";
+        left: 0;
+        top: 0;
+        position: absolute;
+        width: 100%;
+        background-image: url("images/clouds.png");
+        height: 100%;
+        background-attachment: fixed;
+        background-repeat: no-repeat;
+        background-size: cover;
+        opacity: 0.5;
+        mix-blend-mode:color-dodge;
+        background-position: 20% -200px;
+    }
+</style>
+
+<MudGrid Justify="Justify.FlexStart" Class="d-flex align-content-stretch">
+    <MudItem xs="12" sm="12" md="12" lg="4">
+        <MudPaper Elevation="20" Class="mud-height-full">
+            <MudText Color="Color.Warning" class="mud-height-full parallax text-center pt-1">Make it better</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="5">
+        <MudPaper Elevation="20" Class="mud-height-full">
+            <InitGameComponent @ref="gameSteps"></InitGameComponent>
+        </MudPaper>
+    </MudItem>
+    
+    <LoadingWrapper WaitFor="_dashboard">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="20" Class="d-flex mud-height-full flex-column pt-6 pb-4">
+                <MudIcon Icon="@Icons.Material.Filled.Quiz" Color="Color.Success" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+                <div>
+                    <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1 ml-1">New Quizzes</MudText>
+                    <MudList Clickable SelectedValueChanged=@(e => OnSelectedGameChanged((GameOptionDto)e))>
+                        @foreach (var game in _dashboard.NewGames)
+                        {
+                            <MudListItem Value="game">
+                                <div class="d-flex flex-row">
+                                    <MudAvatar>@game.ShortId</MudAvatar>
+                                    <div class="ml-1">
+                                        <MudText Typo="Typo.subtitle2">@game.Name</MudText>
+                                        <MudText Typo="Typo.subtitle2">Starts: @game.EndDate?.ToString("MM/dd")</MudText>
+                                    </div>
+                                </div>
+                            </MudListItem>
+                            <MudDivider Style="height: 1.5px"/>
+                        }
+                    </MudList>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="20" Class="d-flex flex-column pt-6 pb-4 overflow-auto mud-height-full">
+                <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Success" Class="mx-4" Style="width:54px; height:54px"></MudIcon>
+                <div>
+                    <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1 ml-1">Popular authors</MudText>
+                    <MudList Clickable>
+                        @foreach (var user in _dashboard.PopularUsers)
+                        {
+                            <MudListItem>
+                                @user
+                            </MudListItem>
+                            <MudDivider />
+                        }
+                    </MudList>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="20" Class="d-flex flex-column pt-6 pb-4 overflow-auto mud-height-full">
+                <MudIcon Icon="@Icons.Material.Filled.Apps" Color="Color.Tertiary" Class="mx-4" Style="width:54px; height:54px;"></MudIcon>
+                <div>
+                    <MudText Typo="Typo.subtitle1" Class="mud-text-secondary mb-n1 ml-1">Popular Quizzes</MudText>
+                    <MudList Clickable SelectedValueChanged=@(e => OnSelectedGameChanged((GameOptionDto)e))>
+                        @foreach (var game in _dashboard.PopularGames)
+                        {
+                            <MudListItem Value="game">
+                                <div class="d-flex flex-row">
+                                    <MudAvatar>@game.ShortId</MudAvatar>
+                                    <div class="ml-1">
+                                        <MudText Typo="Typo.subtitle2">@game.Name</MudText>
+                                        <MudText Typo="Typo.subtitle2">Is active: @game.IsActive</MudText>
+                                    </div>
+                                </div>
+                            </MudListItem>
+                            <MudDivider Style="height: 1.5px"/>
+                        }
+                    </MudList>
+                </div>
+            </MudPaper>
+        </MudItem>
+    </LoadingWrapper>
+</MudGrid>
+
+@code {
+    InitGameComponent? gameSteps { get; set; }
+
+    NotAthorizedDashboardDto? _dashboard;
+
+    async Task OnSelectedGameChanged(GameOptionDto game)
+    {
+        if (gameSteps != null)
+        {
+            await gameSteps.GameCodeChosen(game.ShortId);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _dashboard = await Http.Client
+            .GetFromJsonAsync<NotAthorizedDashboardDto>("Games");
+    }
+}

@@ -3,63 +3,73 @@
 @using SQuiz.Client.Pages.EditQuizSteps
 @using SQuiz.Shared.Dtos.Quiz
 @using SQuiz.Client.Shared.Components
+@using SQuiz.Shared.Extensions
 @inject HttpClient Http
 @inject NavigationManager Nav
 @implements IDisposable
 
 <LoadingWrapper WaitFor="@Quiz">
-    <div class="container">
-        <a class="m-2 link-secondary" href="/">Back to table</a>
+    <MudGrid>
+        <MudItem xs="12">
+            <MudFab Class="mr-2" Color="Color.Dark" Href="/" Icon="@Icons.Material.Filled.ArrowBack" />
+            @if(IsEditingMode) 
+            {
+                <MudFab Color="Color.Info" Icon="@Icons.Material.Filled.Info" Href="@(Nav.GetUriWithQueryParameter(EDIT_KEY, "false"))"/> 
+            }
+            else 
+            {
+                <MudFab Color="Color.Primary" Icon="@Icons.Material.Filled.Edit" Href="@(Nav.GetUriWithQueryParameter(EDIT_KEY, "true"))" />
+            }
+        </MudItem>
         
         @if(IsEditingMode)
         {
-            <a class="m-2 link-secondary" href="@(Nav.GetUriWithQueryParameter(EDIT_KEY, "false"))">Back to view details</a>
             <UpdateQuizSteps Quiz="Quiz"></UpdateQuizSteps>
         }
         else 
         {
-            <a class="m-2 link-secondary" href="@(Nav.GetUriWithQueryParameter(EDIT_KEY, "true"))">Edit</a>
-            <div class="list-group">
-                <div class="list-group-item">
-                    <div class="row">
-                        <div class="col-2">Name</div>
-                        <div class="col">@Quiz.Name</div>
-                    </div>
-                </div>
-                <div class="list-group-item">
-                    <div class="row">
-                        <div class="col-2">Description</div>
-                        <div class="col">@Quiz.Description</div>
-                    </div>
-                </div>
-                <div class="list-group-item">
-                    <div class="row">
-                        <div class="col-2">Is public</div>
-                        <div class="col">@Quiz.IsPublic</div>
-                    </div>
-                </div>
-                <div class="list-group-item">
-                    Questions
-                    <div class="list-group">
-                        @foreach (var question in Quiz.Questions)
-                        {
-                            <div class="list-group-item">
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="pa-2 mud-height-full">
+                    <MudText Typo="Typo.h6">Name: @Quiz?.Name</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="pa-2 mud-height-full">
+                    <MudText Typo="Typo.h6">Description: @Quiz?.Description</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudPaper Class="pa-2 mud-height-full">
+                    <MudText Typo="Typo.h6">Is public: @Quiz?.IsPublic</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" Class="pa-2">
+                <MudText Typo="Typo.h4">Questions</MudText>
+                <MudList Clickable>
+                    @foreach (var (question, i) in Quiz.Questions.WithIndex())
+                    {
+                        <MudListItem Value="@question">
+                            <div class="d-flex flex-row gap-2 pa-2">
+                                <MudAvatar>
+                                    @(i + 1)
+                                </MudAvatar>
                                 <div>
-                                    @question.QuestionText
-                                </div>
-                                <div>
-                                    Answering Time: @question.AnsweringTime.ToString()
-                                </div>
-                                <div>
-                                    Answering Points: @question.Points.ToString()
+                                    <MudText Typo="Typo.subtitle2">@question.QuestionText</MudText>
+                                    <MudText Typo="Typo.subtitle2">
+                                        Answering Time: @question.AnsweringTime.ToString()
+                                    </MudText>
+                                    <MudText Typo="Typo.subtitle2">
+                                        Answering Points: @question.Points.ToString()
+                                    </MudText>
                                 </div>
                             </div>
-                        }
-                    </div>
-                </div>
-            </div>
+                        </MudListItem>
+                        <MudDivider/>
+                    }
+                </MudList>
+            </MudItem>
         }
-    </div>
+    </MudGrid>
 </LoadingWrapper>
 
 @code {

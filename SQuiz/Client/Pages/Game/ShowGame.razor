@@ -9,12 +9,13 @@
 @inject NavigationManager Nav
 
 <LoadingWrapper WaitFor="Game">
-    <div class="container show-game-container">
-        <div class="m-1 alert alert-success">You are playing '@Game?.Name'.</div>
-        <div class="m-1 alert alert-info">Game contains @(Game?.QuestionCount) questions.</div>
-        <div class="m-1 alert alert-info">When you are ready, press start.</div>
-        <button class="m-1 btn btn-primary" @onclick="Start">Start</button>
-    </div>
+    <MudAlert Class="pa-3 m-1">You are playing '@Game?.Name'.</MudAlert>
+    <MudAlert Severity="Severity.Info" class="pa-3 m-1">Game contains @(Game?.QuestionCount) questions.</MudAlert>
+    <MudAlert Severity="Severity.Info" class="pa-3 m-1">When you are ready, press start.</MudAlert>
+    <MudButton Color="Color.Primary"
+                Variant="Variant.Filled"
+                Class="pa-3 m-1"
+                @onclick="Start">Start</MudButton>
 </LoadingWrapper>
 
 @code {

@@ -2,63 +2,90 @@
 @implements IDisposable
 
 <style>
-    .my-line {
-        border: black 1px solid;
-        border-radius: 3px;
-        height: 5px;
-        min-width: 30px;
-        margin-right: 5px;
-        margin-left: 5px;
+    .my-item {
+        max-width: 500px;
+        min-width: 120px;
+        text-align: center;
     }
 
-    .my-line:last-of-type {
-        display: none;
+    .my-line {
+        position: relative;
+        overflow: visible;
+    }
+
+    .my-line::before {
+        position: absolute;
+        left: -25%;
+        content: "";
+        margin-top: 22px;
+        height: 4px;
+        min-width: 120%;
+        flex-grow: 2;
+        z-index: 1;
+        transition: all .2s;
+        background: linear-gradient(0.25turn, var(--mud-palette-success) 50%, var(--mud-palette-primary) 50%, var(--mud-palette-primary) 50%, var(--mud-palette-success) 50%);
+    }
+
+    .my-line-active::before {
+        z-index: 2;
+        background: linear-gradient(0.25turn, var(--mud-palette-success), var(--mud-palette-primary) 10%, var(--mud-palette-primary) 90%, var(--mud-palette-success));
     }
 
     .header-steps {
+        position: relative;
         max-width: 875px;
-        padding: 30px;
         overflow-x: auto;
     }
+
+    @@media screen and (max-width: 1200px) {
+        .header-steps {
+            max-width: 600px;
+        }
+    }
+
+    @@media screen and (max-width: 650px) {
+        .header-steps {
+            max-width: 300px;
+        }
+    }
+    
 </style>
 
-<div class="card">
-    <div class="card-header">
-        <p>
-            <h3>@Title</h3>
-        </p>
+<MudCard>
+    <MudCardHeader Class="d-flex flex-column">
+        <MudText Typo="Typo.h4">
+            @Title
+        </MudText>
         @SubHeaderContent
-        <div class="d-flex align-items-center header-steps">
-                @foreach (var (item, i) in StepItems.WithIndex())
+        <div class="d-flex align-items-baseline header-steps mx-auto">
+            @foreach (var (item, i) in StepItems.WithIndex())
+            {
+                if (!item.ShowInNavigation)
                 {
-                    if (!item.ShowInNavigation)
-                    {
-                        continue;
-                    }
-                    var classes = item == ActiveStepItem ? "btn-outline-primary" : "btn-outline-secondary";
-                        
-                    <button style="border-radius: 20px" class="btn @classes" @onclick=@(() => ActivateStepItem(item))>
-                        @(i + 1)
-                        <span class="small text-truncate">@item.Title</span>
-                        <span class="app-tooltip">@item.Title</span>
-                    </button>
-                    <span class="my-line"></span>
+                    continue;
                 }
-        </div>
-        
-    </div>
-    <div class="card-body">
-        <div class="row d-flex">
-            <div class="col-lg-11 col-12">
-                <div>
-                    <CascadingValue Value="this">
-                        @ChildContent
-                    </CascadingValue>
+                var isActive = item == ActiveStepItem;
+                var colorBtn = isActive ? Color.Primary : Color.Success;
+                var lineClass = isActive ? "my-line my-line-active" : "my-line";
+                
+                <div class="my-item">
+                    <div class="@lineClass">
+                        <MudFab Class="z-100" Color="colorBtn" @onclick=@(() => ActivateStepItem(item))
+                            Label=@($"{i + 1}")
+                            Title="@item.Title">
+                        </MudFab>
+                    </div>
+                    <MudText>@item.Title</MudText>
                 </div>
-            </div>
+            }
         </div>
-    </div>
-</div>
+    </MudCardHeader>
+    <MudCardContent>
+        <CascadingValue Value="this">
+            @ChildContent
+        </CascadingValue>
+    </MudCardContent>
+</MudCard>
 
 
 

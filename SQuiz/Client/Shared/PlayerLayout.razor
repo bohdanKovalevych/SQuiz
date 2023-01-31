@@ -1,9 +1,31 @@
-﻿@inherits LayoutComponentBase
+﻿@using SQuiz.Client.Interfaces
+@using SQuiz.Client.Themes
+@inherits LayoutComponentBase
+@inject IThemeService ThemeService
 
-<div class="container">
-    <main>
-        <article class="card">
-            @Body
-        </article>
-    </main>
-</div>
+<MudThemeProvider Theme="MainTheme.Instance.Value" @bind-IsDarkMode="ThemeService.IsDarkMode"/>
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" 
+        Variant="Variant.Filled"/>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="my-16">
+            <MudGrid Class="d-flex flex-row justify-center">
+                <MudItem lg="6" sm="11">
+                    <MudPaper Elevation="12">
+                        @Body
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    protected override Task OnInitializedAsync()
+    {
+        return ThemeService.InitializeAsync();
+    }
+}

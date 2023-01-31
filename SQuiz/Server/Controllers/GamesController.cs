@@ -1,11 +1,11 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SQuiz.Infrastructure.Interfaces;
 using SQuiz.Shared;
+using SQuiz.Shared.Dtos.Dashboards;
 using SQuiz.Shared.Dtos.Game;
 using SQuiz.Shared.Interfaces;
 using SQuiz.Shared.Models;
@@ -28,6 +28,42 @@ namespace SQuiz.Server.Controllers
             _context = context;
             _mapper = mapper;
             _pointsCounter = pointsCounter;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetPublicGames()
+        {
+            var baseQuery = _context.QuizGames
+                .AsNoTracking()
+                .Include(x => x.StartedBy)
+                .Where(x => x.Quiz.IsPublic)
+                .Take(5);
+
+            var popularGames = await baseQuery
+                .OrderByDescending(x => x.Players.Count)
+                .ProjectTo<GameOptionDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            var newGames = await baseQuery
+                .OrderByDescending(x => x.DateCreated)
+                .ProjectTo<GameOptionDto>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+
+            var popularUsers = await baseQuery
+                .OrderByDescending(x => x.Players.Count)
+                .Select(x => x.StartedBy.Name)
+                .Distinct()
+                .Take(5)
+                .ToListAsync();
+
+            var result = new NotAthorizedDashboardDto()
+            {
+                NewGames = newGames,
+                PopularGames = popularGames,
+                PopularUsers = popularUsers
+            };
+
+            return Ok(result);
         }
 
         [HttpGet("{shortId}")]
@@ -58,7 +94,7 @@ namespace SQuiz.Server.Controllers
             var isCorrect = answerDto.AnswerId != null && await _context.Questions
                 .AnyAsync(x => x.CorrectAnswerId == answerDto.AnswerId);
             var points = 0;
-            
+
             if (isCorrect)
             {
                 var question = await _context.Questions
@@ -85,7 +121,7 @@ namespace SQuiz.Server.Controllers
 
         [HttpGet("scores/{playerId}")]
         public async Task<IActionResult> GetScores(string playerId)
-        {   
+        {
             var result = await _context.Players.AsNoTracking()
                 .Where(x => x.QuizGame.Players.Any(x => x.Id == playerId))
                 .OrderByDescending(x => x.Points)
@@ -137,7 +173,7 @@ namespace SQuiz.Server.Controllers
             var player = await _context.Players
                 .Include(x => x.PlayerAnswers)
                 .FirstOrDefaultAsync(x => x.Id == playerId);
-            
+
             if (player == null)
             {
                 return;
@@ -152,7 +188,7 @@ namespace SQuiz.Server.Controllers
         public async Task<IActionResult> GetPlayer(string id)
         {
             var player = await _context.Players.FirstOrDefaultAsync(x => x.Id == id);
-            
+
             if (player == null)
             {
                 return NotFound();
@@ -162,7 +198,7 @@ namespace SQuiz.Server.Controllers
 
             return Ok(model);
         }
-        
+
         [HttpPost("rejoin")]
         public async Task<IActionResult> RejoinGame([FromBody] string playerId)
         {

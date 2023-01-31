@@ -6,9 +6,9 @@ namespace SQuiz.Client.Services
 {
     public class PlayGameService : IPlayGameService, IDisposable
     {
-        public event Func<Task> OnTimeEnd;
-        public event Func<SendAnswerDto, Task> OnAnswered;
-        public event Action<double> OnTimeChanged;
+        public event Func<Task>? OnTimeEnd;
+        public event Func<SendAnswerDto, Task>? OnAnswered;
+        public event Action<double>? OnTimeChanged;
         private System.Timers.Timer _timer;
         private double _currentSeconds;
         
@@ -71,7 +71,7 @@ namespace SQuiz.Client.Services
                 return;
             }
 
-            OnTimeChanged(_currentSeconds);
+            OnTimeChanged?.Invoke(_currentSeconds);
         }
     }
 }
