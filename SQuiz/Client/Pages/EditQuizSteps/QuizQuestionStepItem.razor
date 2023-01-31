@@ -18,7 +18,7 @@
         Icon="@Icons.Material.Filled.Preview"
         @onclick="GoToPreview" />
     <MudGrid Justify="Justify.Center">
-        <MudItem xs="12" sm="8" md="6">
+        <MudItem xs="12" sm="8" md="7">
             <MudPaper Class="pa-4 mud-height-full">
                 <ValidationErrorMessage Model="Model" For=@($"Questions[{QuestionIndex}].QuestionText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
                 <MudTextField T="string" Label="Question Text *" Variant="Variant.Outlined" @bind-Text="Question.QuestionText"/>
@@ -45,9 +45,9 @@
             var index = SelectedAnswer.Order;
             var letter = (char)('a' + index);
             var label = $"Text for variant {letter}";
-            <MudItem xs="12" sm="4">
+            <MudItem xs="12" sm="8" md="7">
                 <MudPaper Class="px-2 pt-12 pb-2 mud-height-full" Style="position: relative">
-                    <MudTextField T="string" Label="@label" Variant="Variant.Outlined" @ref="textField" @bind-Text="SelectedAnswer.AnswerText"/>
+                    <MudTextField T="string" Label="@label" Variant="Variant.Outlined" @ref="textField" @bind-Text="SelectedAnswer.AnswerText" @onfocusout="x => Parent.Validate()"/>
                     <MudFab Icon="@Icons.Material.Filled.Close" Size="Size.Small" Style="position: absolute; right: 5px; top: 5px" @onclick=@(() => SelectedAnswer = null) />
                 </MudPaper>
             </MudItem>
@@ -60,7 +60,7 @@
                 Clickable="true"
                 @bind-SelectedValue="SelectedAnswer"
                 Header=@($"Answers ({(char) ('a' + Question.CorrectAnswerIndex)} is correct)")
-                OnReorder="new EventCallback<MudItemDropInfo<AnswerDto>>(this, OnReorder)">
+                OnReorder="new EventCallback<(int, int)>(this, OnReorder)">
                 <ItemTemplate>
                     <MudPaper Elevation="0" Class="pl-3 d-flex flex-row align-center gap-2 flex-grow-1">
                         <MudCheckBox 
@@ -101,7 +101,7 @@
 
     public EditQuizDto? InitialModel => Parent.InitialModel;
 
-    public int QuestionIndex => Model.Questions.IndexOf(Question);
+    public int QuestionIndex => Question.Order;
 
     public string Title => $"Question {QuestionIndex + 1}";
 
@@ -124,15 +124,15 @@
         return new AnswerDto() { Order = Question.Answers.Count };
     }
 
-    public void OnReorder(MudItemDropInfo<AnswerDto> dropInfo)
+    public void OnReorder((int OldIndex, int NewIndex) e)
     {
-        if (Question.CorrectAnswerIndex == dropInfo.IndexInZone)
+        if (Question.CorrectAnswerIndex == e.OldIndex)
         {
-            Question.CorrectAnswerIndex = dropInfo.Item.Order;
+            Question.CorrectAnswerIndex = e.NewIndex;
         }
-        else if (Question.CorrectAnswerIndex == dropInfo.Item.Order)
+        else if (Question.CorrectAnswerIndex == e.NewIndex)
         {
-            Question.CorrectAnswerIndex = dropInfo.IndexInZone;
+            Question.CorrectAnswerIndex = e.OldIndex;
         }
 
         Parent.Validate();
@@ -152,5 +152,10 @@
 
         await Storage.SetItemAsync(Constants.SessionStorageKey.PreviewQuestion, Question);
         Nav.NavigateTo($"previewQuestion/{Parent.GetBackUrl}");
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        Question.Answers.Sort((a, b) => a.Order - b.Order);
     }
 }

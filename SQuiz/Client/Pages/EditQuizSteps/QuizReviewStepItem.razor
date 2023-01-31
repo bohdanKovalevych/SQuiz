@@ -21,24 +21,24 @@
                         <MudText>Number of questions: @Model.Questions.Count</MudText>
                     </MudPaper>
                 </MudListSubheader>
-                @foreach(var (q, i) in Model.Questions.WithIndex())
+                @foreach(var q in Model.Questions.OrderBy(x => x.Order))
                 {
                     <MudListItem >
                         <ChildContent>
-                            <ValidationErrorMessage Model="Model" For=@($"Questions[{i}].QuestionText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
-                            <span class="small">@(i + 1). </span>
+                            <ValidationErrorMessage Model="Model" For=@($"Questions[{q.Order}].QuestionText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
+                            <span class="small">@(q.Order + 1). </span>
                             <span>@q.QuestionText</span>    
                         </ChildContent>
                         <NestedList>
-                            @foreach (var (a, j) in q.Answers.WithIndex())
+                            @foreach (var a in q.Answers.OrderBy(x => x.Order))
                             {
                                 <MudListItem>
                                     <div class="m-3">
-                                        <ValidationErrorMessage Model="Model" For=@($"Questions[{i}].Answers[{j}].AnswerText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
+                                        <ValidationErrorMessage Model="Model" For=@($"Questions[{q.Order}].Answers[{a.Order}].AnswerText") ValidationResult="Parent.ValidationResult"></ValidationErrorMessage>
                                     </div>
                                     <div class="col-12 m-3">
-                                        <span class="alert @(j == q.CorrectAnswerIndex ? "alert-success" : "alert-secondary")">
-                                            <span class="small">@((char)('a' + j)).</span>
+                                        <span class="alert @(a.Order == q.CorrectAnswerIndex ? "green-text" : "")">
+                                            <span class="small">@((char)('a' + a.Order)).</span>
                                             <span>@a.AnswerText</span>
                                         </span>
                                     </div>

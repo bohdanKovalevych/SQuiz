@@ -103,7 +103,7 @@
     public EventCallback<TItem>? OnAdd { get; set; }
 
     [Parameter]
-    public EventCallback<MudItemDropInfo<TItem>>? OnReorder { get; set; }
+    public EventCallback<(int, int)>? OnReorder { get; set; }
 
     private MudDropContainer<TItem>? _dropContainer;
 
@@ -142,43 +142,41 @@
         var indexUp = index - 1;
 
         var dropInfo = new MudItemDropInfo<TItem>(item, "_", indexUp);
-        
-        if (OnReorder.HasValue)
-        {
-            await OnReorder.Value.InvokeAsync(dropInfo);
-        }
 
         Items.UpdateOrder(dropInfo, x => ((IHasOrder)x).Order);
         _dropContainer?.Refresh();
+
+        if (OnReorder.HasValue)
+        {
+            await OnReorder.Value.InvokeAsync((index, indexUp));
+        }
     }
 
     private async Task MoveDown(TItem item)
     {
         var index = Items.IndexOf(item);
         var indexDown = index + 1;
-        
+
         var dropInfo = new MudItemDropInfo<TItem>(item, "_", indexDown);
-        
-        if (OnReorder.HasValue)
-        {
-            await OnReorder.Value.InvokeAsync(dropInfo);
-        }
 
         Items.UpdateOrder(dropInfo, x => ((IHasOrder)x).Order);
         _dropContainer?.Refresh();
+
+        if (OnReorder.HasValue)
+        {
+            await OnReorder.Value.InvokeAsync((index, indexDown));
+        }
     }
 
     private async Task OnDrop(MudItemDropInfo<TItem> info)
     {
         var oldIndex = ((IHasOrder)info.Item).Order;
-        
+        Items.UpdateOrder(info, x => ((IHasOrder)x).Order);
+        StateHasChanged();
+
         if (OnReorder.HasValue)
         {
-            await OnReorder.Value.InvokeAsync(info);
+            await OnReorder.Value.InvokeAsync((oldIndex, info.IndexInZone));
         }
-        
-        Items.UpdateOrder(info, x => ((IHasOrder)x).Order);
-        
-        StateHasChanged();
     }
 }

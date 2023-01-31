@@ -5,11 +5,11 @@
 
 <StepItem Title="Manage Questions" Order="1">
     <MovableList 
-        Items="Model.Questions" 
+        Items="Model.Questions"
         AddItemDelegate="AddItemDelegate"
         Header="Questions"
         OnAdd="new EventCallback<QuestionDto>(this, OnAdd)"
-        OnReorder="new EventCallback<MudItemDropInfo<QuestionDto>>(this, OnReorder)"
+        OnReorder="new EventCallback<(int, int)>(this, OnReorder)"
         OnRemove="new EventCallback<QuestionDto>(this, OnRemove)">
         <ItemTemplate Context="question">
             <MudText Class="pa-1">@question.QuestionText</MudText>
@@ -45,8 +45,9 @@
         Parent.Rerender();
     }
 
-    void OnReorder(MudItemDropInfo<QuestionDto> dropItem)
+    void OnReorder((int, int) e)
     {
+        Parent.Validate();
         Parent.Rerender();
     }
 
@@ -68,5 +69,10 @@
     {
         var questionIndex = Model.Questions.IndexOf(question);
         Parent.NavigateTo(questionIndex + QUESTION_START_INDEX);
+    }
+
+    protected override void OnAfterRender(bool isFirst)
+    {
+        Model.Questions.Sort((a, b) => a.Order - b.Order);
     }
 }

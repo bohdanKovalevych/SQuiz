@@ -24,7 +24,6 @@ namespace SQuiz.Server.Application.AutoMapper.Profiles
 
             CreateMap<AnswerDto, Answer>()
                 .ForMember(x => x.Question, x => x.Ignore())
-                .ForMember(x => x.Order, x => x.Ignore())
                 .ReverseMap();
         }
     }

@@ -16,7 +16,7 @@
         <CascadingValue Value="this">
             <QuizDetailStepItem></QuizDetailStepItem>
             <ManageQuestionsStepItem></ManageQuestionsStepItem>
-            @foreach (var question in Model.Questions)
+            @foreach (var question in Model.Questions.OrderBy(x => x.Order))
             {
                 <QuizQuestionStepItem Question="question"></QuizQuestionStepItem>
             }
@@ -72,6 +72,8 @@
             return;
         }
 
+        Model.Questions.Sort((a, b) => a.Order - b.Order);
+        Model.Questions.ForEach(x => x.Answers.Sort((a, b) => a.Order - b.Order));
         ValidationResult = ValidateHandler(Model);
         AfterSubmitErrorMessage = ValidationResult.IsValid
             ? string.Empty
