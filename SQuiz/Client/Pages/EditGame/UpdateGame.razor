@@ -65,16 +65,12 @@
 
     public string? ErrorMessage;
 
-    public StartGameDto Model { get; set; } = new StartGameDto() 
-    {
-        StartDate = DateTime.Now,
-        EndDate = DateTime.Now.AddDays(1)
-    };
+    public StartGameDto Model { get; set; } = new StartGameDto();
 
-    public TimeSpan? StartTime = DateTime.Now.AddSeconds(0).AddMilliseconds(0).TimeOfDay;
-    public DateTime? StartDate = DateTime.Now;
-    public TimeSpan? EndTime = DateTime.Now.AddSeconds(0).AddMilliseconds(0).TimeOfDay;
-    public DateTime? EndDate = DateTime.Now;
+    public TimeSpan? StartTime { get; set; } = DateTime.Now.AddSeconds(0).AddMilliseconds(0).TimeOfDay;
+    public DateTime? StartDate { get; set; } = DateTime.Now;
+    public TimeSpan? EndTime { get; set; } = DateTime.Now.AddSeconds(0).AddMilliseconds(0).TimeOfDay;
+    public DateTime? EndDate { get; set; } = DateTime.Now.AddDays(1);
 
     public async Task StartGame()
     {
@@ -97,15 +93,18 @@
         }
     }
 
-    private DateTimeOffset? AddTimeToDate(DateTimeOffset? date, TimeSpan? time)
+    private DateTimeOffset? AddTimeToDate(DateTime? date, TimeSpan? time)
     {
-        if (time is TimeSpan notNullTime)
+        if (time is TimeSpan notNullTime && date is DateTime notNullDate)
         {
-            return date?
-                .AddHours(notNullTime.Hours)
-                .AddMinutes(notNullTime.Minutes)
-                .AddSeconds(0)
-                .AddMilliseconds(0);
+            return new DateTimeOffset(
+                notNullDate.Year,
+                notNullDate.Month,
+                notNullDate.Day,
+                notNullTime.Hours,
+                notNullTime.Minutes,
+                0,
+                DateTimeOffset.Now.Offset);
         }
 
         return null;
@@ -117,13 +116,16 @@
         {
             Model.QuizId = QuizOptions[0].Id;
         }
-        
+
         if(GameOption != null)
         {
             Model.QuizId = GameOption.QuizId;
             Model.Id = GameOption.Id;
+            Model.ShortId = GameOption.ShortId;
             Model.EndDate = GameOption.EndDate;
             Model.StartDate = GameOption.StartDate;
+            StartDate = Model.StartDate?.Date;
+            EndDate = Model.EndDate?.Date;
             StartTime = GameOption.StartDate?.TimeOfDay;
             EndTime = GameOption.EndDate?.TimeOfDay;
         }

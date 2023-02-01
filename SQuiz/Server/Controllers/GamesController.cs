@@ -1,13 +1,18 @@
 ﻿using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SQuiz.Application.Games.ComputeAndSavePoints;
+using SQuiz.Application.Games.GetQuestion;
+using SQuiz.Application.Games.ResetPoints;
+using SQuiz.Application.Games.SendAnswer;
 using SQuiz.Application.Interfaces;
+using SQuiz.Server.Extensions;
 using SQuiz.Shared;
 using SQuiz.Shared.Dtos.Dashboards;
 using SQuiz.Shared.Dtos.Game;
-using SQuiz.Shared.Interfaces;
 using SQuiz.Shared.Models;
 using Constants = SQuiz.Client.Constants;
 
@@ -20,15 +25,15 @@ namespace SQuiz.Server.Controllers
     {
         private readonly ISQuizContext _context;
         private readonly IMapper _mapper;
-        private readonly IPointsCounter _pointsCounter;
+        private readonly IMediator _mediator;
 
         public GamesController(ISQuizContext context,
             IMapper mapper,
-            IPointsCounter pointsCounter)
+            IMediator mediator)
         {
             _context = context;
             _mapper = mapper;
-            _pointsCounter = pointsCounter;
+            _mediator = mediator;
         }
 
         [HttpGet]
@@ -91,38 +96,10 @@ namespace SQuiz.Server.Controllers
         public async Task<IActionResult> SendAnswer(SendAnswerDto answerDto)
         {
             string? playerId = Request.Cookies[Constants.CookiesKey.PlayerId];
-            bool isCorrect = answerDto.AnswerId != null && await _context.Questions
-                .AnyAsync(x => x.CorrectAnswerId == answerDto.AnswerId);
-            int points = 0;
-            var question = await _context.Questions
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(x => x.Answers.Any(x => x.Id == answerDto.AnswerId));
+            var sendAnswerCommand = new SendAnswerCommand(playerId, answerDto);
+            var result = await _mediator.Send(sendAnswerCommand);
 
-            if (isCorrect)
-            {
-                points = _pointsCounter.GetPoints(answerDto.TimeToSolve, question.AnsweringTime, question.Points);
-            }
-
-            var playerAnswer = new PlayerAnswer()
-            {
-                Id = Guid.NewGuid().ToString(),
-                AnswerId = answerDto.AnswerId,
-                PlayerId = playerId,
-                Points = points
-            };
-
-            _context.PlayerAnswers.Add(playerAnswer);
-            await _context.SaveChangesAsync();
-
-            var receivedPoints = new ReceivedPointsDto()
-            {
-                CorrectAnswerId = question?.CorrectAnswerId,
-                CurrentPoints = points,
-                SelectedAnswerId = answerDto.AnswerId,
-                TotalPoints = await ComputePoints(playerId)
-            };
-
-            return Ok(receivedPoints);
+            return result.MatchAction();
         }
 
         [HttpGet("scores/{playerId}")]
@@ -143,65 +120,30 @@ namespace SQuiz.Server.Controllers
         {
             string playerId = Request?.Cookies[Constants.CookiesKey.PlayerId] ?? throw new ArgumentException();
             string? lastQuestion = Request?.Cookies[Constants.CookiesKey.QuestionIndex];
-
             lastQuestion ??= "0";
+            bool parsed = int.TryParse(lastQuestion, out var index);
 
-            int index = int.Parse(lastQuestion);
-
-            var question = await _context.Questions
-                .Include(x => x.Answers)
-                .FirstOrDefaultAsync(x => x.Quiz
-                    .QuizGames
-                    .Any(x => x.Players
-                    .Any(x => x.Id == playerId))
-                        && x.Order == index);
-
-            if (question == null)
+            if (!parsed)
             {
-                await ComputeAndSavePoints(playerId);
-                Response.Cookies.Delete(Constants.CookiesKey.QuestionIndex);
-                return NoContent();
+                return BadRequest();
             }
 
-            Response.Cookies.Append(Constants.CookiesKey.QuestionIndex, $"{index + 1}");
-
-            question.Answers = question.Answers
-                .OrderBy(x => x.Order)
-                .ToList();
-
-            var questionDto = _mapper.Map<GameQuestionDto>(question);
-
-            return Ok(questionDto);
-        }
-
-        private async Task ComputeAndSavePoints(string playerId)
-        {
-            var player = await _context.Players
-                .FirstOrDefaultAsync(x => x.Id == playerId);
-
-            if (player == null)
+            var resetPoints = new ResetPointsCommand(playerId);
+            var savePoints = new ComputeAndSavePointsCommand(playerId);
+            var getQuestionCommand = new GetQuestionCommand(playerId, index)
             {
-                return;
-            }
+                OnEndQuiz = async () =>
+                {
+                    Response.Cookies.Delete(Constants.CookiesKey.QuestionIndex);
+                    await _mediator.Send(savePoints);
+                },
+                OnStartQuiz = async () => await _mediator.Send(resetPoints),
+                OnIndexChanged = i => Response.Cookies.Append(Constants.CookiesKey.QuestionIndex, i.ToString())
+            };
 
-            player.Points = await ComputePoints(playerId);
-            await _context.SaveChangesAsync();
-        }
+            var result = await _mediator.Send(getQuestionCommand);
 
-        private async Task<int> ComputePoints(string playerId)
-        {
-            var player = await _context.Players
-                .Include(x => x.PlayerAnswers)
-                .FirstOrDefaultAsync(x => x.Id == playerId);
-
-            if (player == null)
-            {
-                return 0;
-            }
-
-            int result = player.PlayerAnswers.Sum(x => x.Points);
-
-            return result;
+            return result.MatchAction();
         }
 
         [HttpGet("players/{id}")]

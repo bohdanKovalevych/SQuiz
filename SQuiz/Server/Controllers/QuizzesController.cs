@@ -1,12 +1,16 @@
 ﻿using AutoMapper;
+using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SQuiz.Application.Interfaces;
+using SQuiz.Application.Quizzes.CreateQuiz;
+using SQuiz.Application.Quizzes.GetQuiz;
+using SQuiz.Application.Quizzes.UpdateQuiz;
+using SQuiz.Server.Extensions;
 using SQuiz.Shared;
 using SQuiz.Shared.Dtos.Quiz;
 using SQuiz.Shared.Extensions;
-using SQuiz.Shared.Models;
 using System.Security.Claims;
 
 namespace SQuiz.Server.Controllers
@@ -18,16 +22,17 @@ namespace SQuiz.Server.Controllers
     {
         private readonly ISQuizContext _quizContext;
         private readonly IQuizService _quizService;
-        private readonly IMapper _mapper;
+        private readonly IMediator _mediator;
 
-        public QuizzesController(ISQuizContext quizContext, IMapper mapper,
-            IQuizService quizService)
+        public QuizzesController(ISQuizContext quizContext,
+            IQuizService quizService,
+            IMediator mediator)
         {
             _quizContext = quizContext;
             _quizService = quizService;
-            _mapper = mapper;
+            _mediator = mediator;
         }
-
+        
         [HttpGet]
         public async Task<IActionResult> GetQuizzes()
         {
@@ -55,108 +60,39 @@ namespace SQuiz.Server.Controllers
         [Authorize(Policies.QuizAuthor)]
         public async Task<IActionResult> GetQuiz(string resourceId)
         {
-            var quiz = await _quizContext.Quizzes
-                .Include(x => x.Questions)
-                    .ThenInclude(x => x.Answers)
-                .Include(x => x.Questions)
-                    .ThenInclude(x => x.CorrectAnswer)
-                .OrderByDescending(x => x.DateUpdated)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Id == resourceId);
+            var command = new GetQuizCommand() { QuizId = resourceId };
 
-            if (quiz == null)
-            {
-                return NotFound();
-            }
+            var result = await _mediator.Send(command);
 
-            _quizService.ReorderQuestions(quiz);
-            _quizService.ReorderAnswers(quiz);
-
-            var quizDto = _mapper.Map<QuizDetailsDto>(quiz);
-
-            if (quizDto == null)
-            {
-                return BadRequest();
-            }
-
-            _quizService.SetCorrectAnswersFromEntity(quiz, quizDto.Questions);
-
-            return Ok(quizDto);
+            return result.MatchAction();
         }
 
         [HttpPut("{resourceId}")]
         [Authorize(Policies.QuizAuthor)]
         public async Task<IActionResult> UpdateQuiz(string resourceId, [FromBody] EditQuizDto model)
         {
-            var quiz = await _quizContext.Quizzes
-                .Include(x => x.Questions)
-                    .ThenInclude(x => x.Answers)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Id == resourceId);
+            model.Id = resourceId;
 
-            if (quiz == null)
+            var command = new UpdateQuizCommand()
             {
-                return NotFound();
-            }
+                Model = model
+            };
+            var result = await _mediator.Send(command);
 
-            var questionsToRemove = _quizService.GetQuestionsToRemove(quiz, model);
-            var answersToRemove = _quizService.GetAnswersToRemove(quiz, model);
-
-            _quizContext.Questions.UpdateRange(questionsToRemove);
-            await _quizContext.SaveChangesAsync();
-
-            _quizContext.Answers.RemoveRange(answersToRemove);
-            _quizContext.Questions.RemoveRange(questionsToRemove);
-            await _quizContext.SaveChangesAsync();
-
-            foreach (var q in quiz.Questions)
-            {
-                _quizContext.Entry(q).State = EntityState.Detached;
-                foreach (var a in q.Answers)
-                {
-                    _quizContext.Entry(a).State = EntityState.Detached;
-                }
-            }
-
-            _mapper.Map(model, quiz);
-            quiz.DateUpdated = DateTime.Now;
-
-            _quizService.AssignIdsToQuestionsAndAnswers(quiz,
-                x => _quizContext.Entry(x).State = EntityState.Modified,
-                x => _quizContext.Entry(x).State = EntityState.Added);
-
-            _quizContext.Quizzes.Update(quiz);
-
-            await _quizContext.SaveChangesAsync();
-
-            _quizService.SetCorrectAnswersFromModel(quiz, model.Questions);
-
-            await _quizContext.SaveChangesAsync();
-
-            return Ok();
+            return result.MatchAction();
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateQuiz(EditQuizDto quizDto)
         {
             string userid = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var quiz = _mapper.Map<Quiz>(quizDto);
-
-            quiz.Id = Guid.NewGuid().ToString();
-            quiz.AuthorId = userid;
-
-            _quizService.AssignIdsToQuestionsAndAnswers(quiz,
-                x => _quizContext.Entry(x).State = EntityState.Modified,
-                x => _quizContext.Entry(x).State = EntityState.Added);
-
-            _quizContext.Quizzes.Add(quiz);
-
-            await _quizContext.SaveChangesAsync();
-
-            _quizService.SetCorrectAnswersFromModel(quiz, quizDto.Questions);
-
-            await _quizContext.SaveChangesAsync();
-
+            var request = new CreateQuizCommand()
+            {
+                Model = quizDto,
+                UserId = userid
+            };
+            await _mediator.Send(request);
+            
             return Ok();
         }
 

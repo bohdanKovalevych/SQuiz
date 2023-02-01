@@ -1,8 +1,8 @@
-﻿using SQuiz.Client.Interfaces;
+﻿using SQuiz.Shared.Interfaces;
 using SQuiz.Shared.Dtos.Game;
 using SQuiz.Shared.Models;
 
-namespace SQuiz.Client.Services
+namespace SQuiz.Shared.Services
 {
     public class PlayGameService : IPlayGameService, IDisposable
     {

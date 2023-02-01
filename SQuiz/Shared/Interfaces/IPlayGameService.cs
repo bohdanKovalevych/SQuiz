@@ -1,6 +1,6 @@
 ﻿using SQuiz.Shared.Dtos.Game;
 
-namespace SQuiz.Client.Interfaces
+namespace SQuiz.Shared.Interfaces
 {
     public interface IPlayGameService
     {

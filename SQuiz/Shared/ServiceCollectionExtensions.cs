@@ -12,6 +12,7 @@ namespace SQuiz.Shared
         {
             services.AddTransient<IValidator<EditQuizDto>, EditQuizDtoValidator>();
             services.AddTransient<IPointsCounter, PointsCounter>();
+            services.AddScoped<IPlayGameService, PlayGameService>();
 
             return services;
         }

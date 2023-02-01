@@ -31,13 +31,18 @@
         return Validator.Validate(quiz);
     }
 
-    public async Task<string> SaveQuiz(EditQuizDto quiz)
+    public async Task<string?> SaveQuiz(EditQuizDto quiz)
     {
         string? message = null;
-        
+
         var result = await Http.PutAsJsonAsync($"Quizzes/{Quiz.Id}", quiz);
-        message = await result.Content.ReadAsStringAsync();
         
+        if (result.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        message = await result.Content.ReadAsStringAsync();
         return message;
     }
 }

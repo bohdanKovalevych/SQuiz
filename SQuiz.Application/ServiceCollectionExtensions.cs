@@ -7,6 +7,8 @@ namespace SQuiz.Application
     {
         public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
         {
+            services.AddMediator(x => x.ServiceLifetime = ServiceLifetime.Scoped);
+
             return services;
         }
     }
