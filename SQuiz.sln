@@ -3,15 +3,23 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.3.32922.545
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQuiz.Server", "SQuiz\Server\SQuiz.Server.csproj", "{5C6D1A19-96A7-4CEE-A6CE-639A45E15C4C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQuiz.Server", "SQuiz\src\SQuiz.Server\SQuiz.Server.csproj", "{5C6D1A19-96A7-4CEE-A6CE-639A45E15C4C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQuiz.Client", "SQuiz\Client\SQuiz.Client.csproj", "{465F5659-9DFA-4FF6-BC72-1F871267ED88}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQuiz.Client", "SQuiz\src\SQuiz.Client\SQuiz.Client.csproj", "{465F5659-9DFA-4FF6-BC72-1F871267ED88}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQuiz.Shared", "SQuiz\Shared\SQuiz.Shared.csproj", "{F965B7FE-0EA7-4A0C-99B7-8D8A92C40AD9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQuiz.Shared", "SQuiz\src\SQuiz.Shared\SQuiz.Shared.csproj", "{F965B7FE-0EA7-4A0C-99B7-8D8A92C40AD9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQuiz.Infrastructure", "SQuiz.Infrastructure\SQuiz.Infrastructure.csproj", "{BB1DE653-001E-413B-85C1-02B059BF3FAB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQuiz.Infrastructure", "SQuiz\src\SQuiz.Infrastructure\SQuiz.Infrastructure.csproj", "{BB1DE653-001E-413B-85C1-02B059BF3FAB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQuiz.Identity", "SQuiz.Identity\SQuiz.Identity.csproj", "{980F1B64-E54B-4A8E-ABDE-2F75722EED25}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQuiz.Identity", "SQuiz\src\SQuiz.Identity\SQuiz.Identity.csproj", "{980F1B64-E54B-4A8E-ABDE-2F75722EED25}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQuiz.Application", "SQuiz\src\SQuiz.Application\SQuiz.Application.csproj", "{5FE943A5-D83F-4529-BDEB-E3D2EEF18122}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{58F16610-1762-4E75-85C0-84EDA4F4B0EE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{4980DC28-0D08-4725-8F5B-7DEE094C5B64}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQuiz.Application.UnitTests", "SQuiz\tests\SQuiz.Application.UnitTests\SQuiz.Application.UnitTests.csproj", "{11335047-4A89-4591-A5D1-1514D2F1016F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,9 +47,26 @@ Global
 		{980F1B64-E54B-4A8E-ABDE-2F75722EED25}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{980F1B64-E54B-4A8E-ABDE-2F75722EED25}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{980F1B64-E54B-4A8E-ABDE-2F75722EED25}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FE943A5-D83F-4529-BDEB-E3D2EEF18122}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FE943A5-D83F-4529-BDEB-E3D2EEF18122}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FE943A5-D83F-4529-BDEB-E3D2EEF18122}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FE943A5-D83F-4529-BDEB-E3D2EEF18122}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11335047-4A89-4591-A5D1-1514D2F1016F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11335047-4A89-4591-A5D1-1514D2F1016F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11335047-4A89-4591-A5D1-1514D2F1016F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11335047-4A89-4591-A5D1-1514D2F1016F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5C6D1A19-96A7-4CEE-A6CE-639A45E15C4C} = {58F16610-1762-4E75-85C0-84EDA4F4B0EE}
+		{465F5659-9DFA-4FF6-BC72-1F871267ED88} = {58F16610-1762-4E75-85C0-84EDA4F4B0EE}
+		{F965B7FE-0EA7-4A0C-99B7-8D8A92C40AD9} = {58F16610-1762-4E75-85C0-84EDA4F4B0EE}
+		{BB1DE653-001E-413B-85C1-02B059BF3FAB} = {58F16610-1762-4E75-85C0-84EDA4F4B0EE}
+		{980F1B64-E54B-4A8E-ABDE-2F75722EED25} = {58F16610-1762-4E75-85C0-84EDA4F4B0EE}
+		{5FE943A5-D83F-4529-BDEB-E3D2EEF18122} = {58F16610-1762-4E75-85C0-84EDA4F4B0EE}
+		{11335047-4A89-4591-A5D1-1514D2F1016F} = {4980DC28-0D08-4725-8F5B-7DEE094C5B64}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0A345718-F0FC-40C0-8A85-646B91D30BB2}

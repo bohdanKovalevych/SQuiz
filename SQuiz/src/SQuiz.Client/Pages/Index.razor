@@ -1,0 +1,108 @@
+﻿@page "/"
+@using SQuiz.Client.Pages.Dashboard
+@using SQuiz.Client.Pages.Game
+@using SQuiz.Client.Pages.Game.InitGameSteps
+@using SQuiz.Shared.Dtos.Game
+@using SQuiz.Shared.Models
+@using SQuiz.Client.Shared.Components
+@using SQuiz.Client.Pages.EditQuizSteps
+@using SQuiz.Client.Pages.ManageQuizes
+
+@inject HttpClient Http
+@inject ISessionStorageService Session
+@inject ICookieStoreService Cookies
+
+<div class="container">
+    <PageTitle>Quizzes</PageTitle>
+    <AuthorizeView>
+        <Authorized>
+           <DashboardComponent/>
+        </Authorized>
+        <NotAuthorized>
+            <NotAthorizedDashboardComponent/>
+        </NotAuthorized>
+    </AuthorizeView>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Session.SetItemAsync("915809a9-8e9b-43b1-b331-0ce7b96bafec.940a914e-05a6-4807-8e22-374cf7a71990-login.microsoftonline.com-idtoken-901fb197-2f0e-4e20-9736-cf80187a40ac-940a914e-05a6-4807-8e22-374cf7a71990-",
+        "{" +
+            "\"credentialType\": \"IdToken\"," +
+            "\"homeAccountId\": \"915809a9-8e9b-43b1-b331-0ce7b96bafec.940a914e-05a6-4807-8e22-374cf7a71990\"," +
+            "\"environment\": \"login.microsoftonline.com\"," +
+            "\"clientId\": \"901fb197-2f0e-4e20-9736-cf80187a40ac\"," +
+            "\"secret\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyJ9.eyJhdWQiOiI5MDFmYjE5Ny0yZjBlLTRlMjAtOTczNi1jZjgwMTg3YTQwYWMiLCJpc3MiOiJodHRwczovL2xvZ2luLm1pY3Jvc29mdG9ubGluZS5jb20vOTQwYTkxNGUtMDVhNi00ODA3LThlMjItMzc0Y2Y3YTcxOTkwL3YyLjAiLCJpYXQiOjE2NzM5NTAyMDgsIm5iZiI6MTY3Mzk1MDIwOCwiZXhwIjoxNjczOTU0MTA4LCJhaW8iOiJBVFFBeS84VEFBQUF2THNGa3hpSmhldFJMTGRkcnY2Zks3cXk4SE9zOVU2cE9IMFdlY2FzT1F6Mmx4RWxqS3NUd241S3MrdHNMNU9iIiwibmFtZSI6ImJvaGRhbi5rb3ZhbGV2eWNoIiwibm9uY2UiOiI2OWU1MWUwYS02N2I3LTQ1YjktYWIzMC1hNjNjNmM5NGQwNmEiLCJvaWQiOiI5MTU4MDlhOS04ZTliLTQzYjEtYjMzMS0wY2U3Yjk2YmFmZWMiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJib2hkYW4ua292YWxldnljaEBpbmZvYWltcHJvc29mdC5vbm1pY3Jvc29mdC5jb20iLCJyaCI6IjAuQVlJQVRwRUtsS1lGQjBpT0lqZE05NmNaa0pleEg1QU9MeUJPbHpiUGdCaDZRS3lWQU1JLiIsInN1YiI6IkVKOEp4MXVGd3RFcTU0aEw2QlRFWkxWZ2FRWFBGS19rSEhEdzNWU3BYMHciLCJ0aWQiOiI5NDBhOTE0ZS0wNWE2LTQ4MDctOGUyMi0zNzRjZjdhNzE5OTAiLCJ1dGkiOiIzNzB4M0ZTRjMwYUlIa00teEJnQkFBIiwidmVyIjoiMi4wIn0.PRM6GYswfIa_MHevQAQVlGEVvqXdQRVG4cGa4AX6JjDYwyW_FR7IAoKIUcvzrR7pzhnp2Bb6bFZ9IpYy238qtHyuoCQ4KiAJTDWLhWtsZ8BNKi4RqmzYK9f1RRMugXUcZxDZlzUYRJaTCM7BmTOKmLcbDv4XTpxnChmkKBoeSABTZhKculyO5JvofLsfu1F3hELFb-ZDUdeDijsfktCwdslBHBPGtmgxPA31m3JJGjDAFyDiAaa9QW-NMcNIqw2XmynUu00QG4WttfDclBPooWqaYW_GRaF30fwae83vW1oWh8JNkvl8EAF_JmT35FopKpTbrDIuoOkpq-Q4LwQQ8A\"," +
+            "\"realm\": \"940a914e-05a6-4807-8e22-374cf7a71990\"" +
+        "}");
+
+        await Session.SetItemAsync("915809a9-8e9b-43b1-b331-0ce7b96bafec.940a914e-05a6-4807-8e22-374cf7a71990-login.microsoftonline.com-accesstoken-901fb197-2f0e-4e20-9736-cf80187a40ac-940a914e-05a6-4807-8e22-374cf7a71990-api://7334ca49-d500-4c6c-ac6c-46ad7c250b20/access_as_user", 
+        "{" +
+            "\"homeAccountId\": \"915809a9-8e9b-43b1-b331-0ce7b96bafec.940a914e-05a6-4807-8e22-374cf7a71990\"," +
+            "\"credentialType\": \"AccessToken\"," +
+            "\"secret\": \"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6Ii1LSTNROW5OUjdiUm9meG1lWm9YcWJIWkdldyJ9.eyJhdWQiOiI3MzM0Y2E0OS1kNTAwLTRjNmMtYWM2Yy00NmFkN2MyNTBiMjAiLCJpc3MiOiJodHRwczovL2xvZ2luLm1pY3Jvc29mdG9ubGluZS5jb20vOTQwYTkxNGUtMDVhNi00ODA3LThlMjItMzc0Y2Y3YTcxOTkwL3YyLjAiLCJpYXQiOjE2NzM5NTAyMDgsIm5iZiI6MTY3Mzk1MDIwOCwiZXhwIjoxNjczOTU1MjEyLCJhaW8iOiJBVFFBeS84VEFBQUFWTzg1cVJpcWs5ZXFWQk55a2hYTFFFOWlndGkzdWVLb1AxNkYzTklLNmVWeDJSMVRpdVJuOURnZDJMMmNsK2ZqIiwiYXpwIjoiOTAxZmIxOTctMmYwZS00ZTIwLTk3MzYtY2Y4MDE4N2E0MGFjIiwiYXpwYWNyIjoiMCIsIm5hbWUiOiJib2hkYW4ua292YWxldnljaCIsIm9pZCI6IjkxNTgwOWE5LThlOWItNDNiMS1iMzMxLTBjZTdiOTZiYWZlYyIsInByZWZlcnJlZF91c2VybmFtZSI6ImJvaGRhbi5rb3ZhbGV2eWNoQGluZm9haW1wcm9zb2Z0Lm9ubWljcm9zb2Z0LmNvbSIsInJoIjoiMC5BWUlBVHBFS2xLWUZCMGlPSWpkTTk2Y1prRW5LTkhNQTFXeE1yR3hHclh3bEN5Q1ZBTUkuIiwic2NwIjoiYWNjZXNzX2FzX3VzZXIiLCJzdWIiOiJfU2JsVy0xT2JNbGloUWU0dkFqTThzcWFvU18zdEVEVklIUXAtSEFNeU5VIiwidGlkIjoiOTQwYTkxNGUtMDVhNi00ODA3LThlMjItMzc0Y2Y3YTcxOTkwIiwidXRpIjoiMzcweDNGU0YzMGFJSGtNLXhCZ0JBQSIsInZlciI6IjIuMCJ9.qeqSrkr87fmlelQTdf7J_dYRG_pGBIghYYA0jqJBP0CN3zqaOykZUWWGBiUq5jSxCEzPKilADFFZ27jK3rmMv2ggDarTpXq00yGjhM0YGGsuvS-loxwtkgh0TEYu-gkXXgO59mzFbvN26aDIjedF4O-Rw1XGKG1v7sSt6U4dV7o8QStSp5iaWjjP53XSgXB2g2V3-1xE32UBYEQuwM58SfzAIV04LpBKYYZ4Gq2Oo2RaJGbuQl9NhEn_2Rlryy6xtwSwfZs_7l2cSKgV0CHGivpiPA-SkY8E-eYPm7hJs9ldkWuah2Qs9zJ6CeVQtLObqGVhHv7BdKKpFI3gxfROgg\"," +
+            "\"cachedAt\": \"1673950508\"," +
+            "\"expiresOn\": \"1673955211\"," +
+            "\"extendedExpiresOn\": \"1673959914\"," +
+            "\"environment\": \"login.microsoftonline.com\"," +
+            "\"clientId\": \"901fb197-2f0e-4e20-9736-cf80187a40ac\"," +
+            "\"realm\": \"940a914e-05a6-4807-8e22-374cf7a71990\"," +
+            "\"target\": \"api://7334ca49-d500-4c6c-ac6c-46ad7c250b20/access_as_user\"," +
+            "\"tokenType\": \"Bearer\"" +
+        "}");
+        await Session.SetItemAsync("server-telemetry-901fb197-2f0e-4e20-9736-cf80187a40ac", 
+        "{" +
+            "\"cacheHits\": 3" +
+        "}");
+        await Session.SetItemAsync("915809a9-8e9b-43b1-b331-0ce7b96bafec.940a914e-05a6-4807-8e22-374cf7a71990-login.microsoftonline.com-940a914e-05a6-4807-8e22-374cf7a71990", 
+        "{" +
+            "\"authorityType\": \"MSSTS\"," +
+            "\"clientInfo\": \"eyJ1aWQiOiI5MTU4MDlhOS04ZTliLTQzYjEtYjMzMS0wY2U3Yjk2YmFmZWMiLCJ1dGlkIjoiOTQwYTkxNGUtMDVhNi00ODA3LThlMjItMzc0Y2Y3YTcxOTkwIn0\"," +
+            "\"homeAccountId\": \"915809a9-8e9b-43b1-b331-0ce7b96bafec.940a914e-05a6-4807-8e22-374cf7a71990\"," +
+            "\"environment\": \"login.microsoftonline.com\"," +
+            "\"realm\": \"940a914e-05a6-4807-8e22-374cf7a71990\"," +
+            "\"idTokenClaims\":  {" +
+                "\"aud\": \"901fb197-2f0e-4e20-9736-cf80187a40ac\"," +
+                "\"iss\": \"https://login.microsoftonline.com/940a914e-05a6-4807-8e22-374cf7a71990/v2.0\"," +
+                "\"iat\": 1673950208," +
+                "\"nbf\": 1673950208," +
+                "\"exp\": 1673954108," +
+                "\"aio\": \"ATQAy/8TAAAAvLsFkxiJhetRLLddrv6fK7qy8HOs9U6pOH0WecasOQz2lxEljKsTwn5Ks+tsL5Ob\"," +
+                "\"name\": \"bohdan.kovalevych\"," +
+                "\"nonce\": \"69e51e0a-67b7-45b9-ab30-a63c6c94d06a\"," +
+                "\"oid\": \"915809a9-8e9b-43b1-b331-0ce7b96bafec\"," +
+                "\"preferred_username\": \"bohdan.kovalevych@infoaimprosoft.onmicrosoft.com\"," +
+                "\"rh\": \"0.AYIATpEKlKYFB0iOIjdM96cZkJexH5AOLyBOlzbPgBh6QKyVAMI.\"," +
+                "\"sub\": \"EJ8Jx1uFwtEq54hL6BTEZLVgaQXPFK_kHHDw3VSpX0w\"," +
+                "\"tid\": \"940a914e-05a6-4807-8e22-374cf7a71990\"," +
+                "\"uti\": \"370x3FSF30aIHkM-xBgBAA\"," +
+                "\"ver\": \"2.0\"" +
+                    "}," +
+            "\"localAccountId\": \"915809a9-8e9b-43b1-b331-0ce7b96bafec\"," +
+            "\"username\": \"bohdan.kovalevych@infoaimprosoft.onmicrosoft.com\"," +
+            "\"name\": \"bohdan.kovalevych\"" +
+            "}");
+        await Session.SetItemAsync("915809a9-8e9b-43b1-b331-0ce7b96bafec.940a914e-05a6-4807-8e22-374cf7a71990-login.microsoftonline.com-refreshtoken-901fb197-2f0e-4e20-9736-cf80187a40ac--", 
+        "{" +
+            "\"clientId\": \"901fb197-2f0e-4e20-9736-cf80187a40ac\"," +
+            "\"credentialType\": \"RefreshToken\"," +
+            "\"environment\": \"login.microsoftonline.com\"," +
+            "\"homeAccountId\": \"915809a9-8e9b-43b1-b331-0ce7b96bafec.940a914e-05a6-4807-8e22-374cf7a71990\"," +
+            "\"secret\": \"0.AYIATpEKlKYFB0iOIjdM96cZkJexH5AOLyBOlzbPgBh6QKyVAMI.AgABAAEAAAD--DLA3VO7QrddgJg7WevrAgDs_wQA9P8KozJhSHH1RonFrwaAwAXmDkEjjCtFKc7F8HynaUdJCWovQq--Cl-APKyBUqS1TUAlsEYPtueBS7Fj4BZy88YJ0iDp6phwb_qhNlWZ3_HW592ekNbnIVaQLS4aEnaVIcj5JbL0Q7Ft0Gqtqv68KA4l2hY-1OBc5KaAE8JHFp8VEOM_itTUOaBaPTeSNcptO9LurgmzD4Kr0Va-fFiZR6vJmoCTIZ9ngOTb9FhjpDQ5-hOX5Jmzq_SkV823A9zvCku6JVn7fhm2UqlvsI1H47xSUBdh728zUpWcrKZ1zCQ7yuB6cnW7ZQcNcOibj0y56hEloLH6eW9DCpG8m0WP5UuZjPDnIyRAKcFt6qOQl6hcrpyn3kyV-_cA8FOKf-e5pk-FR3Eo6D5JlfEkOvlvLbVfJeaMkyPvmU60hm8NNnUeipF096NlJk5jMQCPLMf_RnuT_qraoPHaYAkORnj-4WVjxLlkhs03ha4lcPFbOy7cf3xYMYRfXEVGM8oDdRmppbeJew7a6VXtYPZOx46VRnFaEc9kZACQvvhV_oTltxbGfkiaByZ8LGSkftjzfy5t5JEJ-yzxjcW0MbzwLeHM4vqVsfg_2B_LMj9INWHFRGG_J5L2fQiMq-_8na4t2xnWbiNYShrjf4MtR3EgEuCsbMHyNKEZLXZotMspLK-2PNsN7_wfSXNcdIvm6RwoXJHFyr_d51EfunZHFv1ZmEDu5t24MX7AdKYwdKjj2rxeclzcgJnfxCtSMeBtzRtxwBYnAF4SEv7XSmKXFr8-iHHiI7tZxmlxmuQARzEygyNJOOnh\"" +
+        "}");
+
+        await Cookies.SetAsync(new Cookie()
+        {
+            Name = "playerId",
+            Value = "c7224e72-6026-4175-800e-ef5cf26734ae"
+        });
+
+        await Session.SetItemAsync("game", new GameOptionDto()
+        {
+            Id = "ab03ee16-4e42-4067-bf87-993e4d43a5e2",
+            Name = "Sample quiz",
+            QuestionCount = 20,
+        });
+    }
+}

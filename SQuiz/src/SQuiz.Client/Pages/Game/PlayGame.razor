@@ -1,0 +1,51 @@
+﻿@page "/play"
+@layout PlayerLayout
+@using SQuiz.Client.Interfaces
+@using SQuiz.Client.Pages.Game.GameCoreComponents
+@using SQuiz.Client.Services
+@using SQuiz.Shared.Dtos.Game
+@using SQuiz.Shared.Extensions
+@using System.Net
+@using SQuiz.Shared.Interfaces
+
+@implements IDisposable
+@inject PublicClient Http
+@inject NavigationManager Nav
+@inject IPlayGameService PlayGameService
+
+<PlayGameComponent GetQuestionDelegate="GetQuestion"/>
+
+
+@code {
+    public async Task<GameQuestionDto?> GetQuestion()
+    {
+        var response = await Http.Client.GetAsync("Games/questions");
+
+        if (response.StatusCode == HttpStatusCode.NoContent)
+        {
+            Nav.NavigateTo("/gameScores");
+            return null;
+        }
+
+        var question = await response.Content.ReadFromJsonAsync<GameQuestionDto>();
+        return question;
+    }
+
+    async Task OnAnswered(SendAnswerDto answer)
+    {
+        var response = await Http.Client.PostAsJsonAsync("Games/answers", answer);
+        var points = await response.Content.ReadFromJsonAsync<ReceivedPointsDto>();
+        
+        PlayGameService.ReceivePoints(points);
+    }
+
+    protected override void OnInitialized()
+    {
+        PlayGameService.OnAnswered += OnAnswered;
+    }
+
+    public void Dispose()
+    {
+        PlayGameService.OnAnswered -= OnAnswered;
+    }
+}

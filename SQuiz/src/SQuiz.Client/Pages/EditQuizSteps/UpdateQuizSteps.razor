@@ -1,0 +1,48 @@
+﻿@using FluentValidation
+@using FluentValidation.Results
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using SQuiz.Shared.Dtos.Quiz
+@inject IValidator<EditQuizDto> Validator
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<QuizSteps Mode="QuizSteps.MODE.EDIT"
+           ValidateHandler="Validate"
+           SubmitHandler="SaveQuiz"
+           InitialModel="EditQuiz">
+
+</QuizSteps>
+
+@code {
+    [Parameter]
+    public QuizDetailsDto Quiz { get; set; }
+
+    private EditQuizDto EditQuiz => new EditQuizDto()
+    {
+        Id = Quiz.Id,
+        Description = Quiz.Description,
+        IsPublic = Quiz.IsPublic,
+        Name = Quiz.Name,
+        Questions = Quiz.Questions
+    };
+
+    public ValidationResult Validate(EditQuizDto quiz)
+    {
+        return Validator.Validate(quiz);
+    }
+
+    public async Task<string?> SaveQuiz(EditQuizDto quiz)
+    {
+        string? message = null;
+
+        var result = await Http.PutAsJsonAsync($"Quizzes/{Quiz.Id}", quiz);
+        
+        if (result.IsSuccessStatusCode)
+        {
+            return null;
+        }
+
+        message = await result.Content.ReadAsStringAsync();
+        return message;
+    }
+}
