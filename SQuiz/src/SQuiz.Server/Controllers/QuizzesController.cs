@@ -1,10 +1,14 @@
-﻿using AutoMapper;
+﻿using LanguageExt;
+using LanguageExt.Common;
+using LanguageExt.SomeHelp;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SQuiz.Application.Interfaces;
 using SQuiz.Application.Quizzes.CreateQuiz;
+using SQuiz.Application.Quizzes.EditModerators;
+using SQuiz.Application.Quizzes.GetModerators;
 using SQuiz.Application.Quizzes.GetQuiz;
 using SQuiz.Application.Quizzes.UpdateQuiz;
 using SQuiz.Server.Extensions;
@@ -32,7 +36,7 @@ namespace SQuiz.Server.Controllers
             _quizService = quizService;
             _mediator = mediator;
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> GetQuizzes()
         {
@@ -56,6 +60,16 @@ namespace SQuiz.Server.Controllers
             return Ok(quizzes);
         }
 
+        [AllowAnonymous]
+        [HttpGet("moderators")]
+        public async Task<IActionResult> GetModerators([FromQuery] string? q)
+        {
+            var command = new GetModeratorsCommand(q);
+            var result = await _mediator.Send(command);
+
+            return result.MatchAction();
+        }
+
         [HttpGet("{resourceId}")]
         [Authorize(Policies.QuizAuthor)]
         public async Task<IActionResult> GetQuiz(string resourceId)
@@ -73,27 +87,27 @@ namespace SQuiz.Server.Controllers
         {
             model.Id = resourceId;
 
-            var command = new UpdateQuizCommand()
-            {
-                Model = model
-            };
-            var result = await _mediator.Send(command);
+            var updateModeratorsCommand = new EditModeratorsCommand(model);
+            var updateQuizCommand = new UpdateQuizCommand(model);
 
-            return result.MatchAction();
+            var updateResult = await _mediator.Send(updateQuizCommand)
+                .Bind(async _ => await _mediator.Send(updateModeratorsCommand));
+
+            return updateResult.MatchAction();
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateQuiz(EditQuizDto quizDto)
         {
-            string userid = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var request = new CreateQuizCommand()
-            {
-                Model = quizDto,
-                UserId = userid
-            };
-            await _mediator.Send(request);
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             
-            return Ok();
+            var createQuizCommand = new CreateQuizCommand(quizDto, userId);
+            var updateModeratorsCommand = new EditModeratorsCommand(quizDto);
+            
+            var updateResult = await _mediator.Send(createQuizCommand)
+               .Bind(async _ => await _mediator.Send(updateModeratorsCommand));
+
+            return updateResult.MatchAction();
         }
 
         [HttpDelete("{resourceId}")]

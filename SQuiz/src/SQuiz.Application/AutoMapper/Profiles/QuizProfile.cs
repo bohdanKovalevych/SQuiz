@@ -14,8 +14,14 @@ namespace SQuiz.Application.AutoMapper.Profiles
                 .ForMember(x => x.DateUpdated, x => x.Ignore())
                 .ForMember(x => x.ShortId, x => x.Ignore())
                 .ReverseMap();
+            
+            CreateMap<Moderator, ModeratorDto>();
 
-            CreateMap<Quiz, QuizDetailsDto>();
+            CreateMap<Quiz, QuizDetailsDto>()
+                .ForMember(x => x.Moderators, 
+                    x => x.MapFrom(x => x.QuizModerators
+                        .Select(x => x.Moderator)
+                        .ToList()));
 
             CreateMap<QuestionDto, Question>()
                 .ForMember(x => x.QuizId, x => x.Ignore())

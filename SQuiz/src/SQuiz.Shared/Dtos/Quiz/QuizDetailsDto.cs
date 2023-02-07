@@ -11,5 +11,6 @@
         public string? Description { get; set; }
         public bool IsPublic { get; set; } = false;
         public List<QuestionDto> Questions { get; set; } = new List<QuestionDto>();
+        public List<ModeratorDto> Moderators { get; set; } = new List<ModeratorDto>();
     }
 }

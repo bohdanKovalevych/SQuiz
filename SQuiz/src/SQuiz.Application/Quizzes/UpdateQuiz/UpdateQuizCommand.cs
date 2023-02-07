@@ -11,6 +11,11 @@ namespace SQuiz.Application.Quizzes.UpdateQuiz
 {
     public class UpdateQuizCommand : IRequest<Result<Unit>>
     {
+        public UpdateQuizCommand(EditQuizDto model)
+        {
+            Model = model;
+        }
+
         public EditQuizDto Model { get; set; }
     }
 

@@ -1,4 +1,5 @@
-﻿using MudBlazor;
+﻿using Microsoft.AspNetCore.Components;
+using MudBlazor;
 using SQuiz.Client.Shared.Components.Dialogs;
 
 namespace SQuiz.Client.Services
@@ -20,10 +21,23 @@ namespace SQuiz.Client.Services
                 ["ItemName"] = itemName
             };
 
-            var dialog = await _dialog.ShowAsync<DeleteDialog>("Confirm action", parameters);
+            var dialog = await _dialog.ShowAsync<DeleteDialog>($"Add {itemType}", parameters);
             var result = await dialog.Result;
             
             return !result.Canceled;
+        }
+
+        public async Task AskToAddItem<TItem, TTemplate>(Func<TItem, Task> onAdded)
+            where TItem: class
+            where TTemplate: ComponentBase
+        {   
+            var dialog = await _dialog.ShowAsync<TTemplate>("Confirm action");
+            var result = await dialog.Result;
+
+            if (result.Data is TItem item)
+            {
+                await onAdded(item);
+            }
         }
     }
 }
