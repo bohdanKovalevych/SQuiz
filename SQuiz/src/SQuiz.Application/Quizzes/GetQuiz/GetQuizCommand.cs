@@ -38,6 +38,8 @@ namespace SQuiz.Application.Quizzes.GetQuiz
                     .ThenInclude(x => x.Answers)
                 .Include(x => x.Questions)
                     .ThenInclude(x => x.CorrectAnswer)
+                .Include(x => x.QuizModerators)
+                    .ThenInclude(x => x.Moderator)
                 .OrderByDescending(x => x.DateUpdated)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == request.QuizId);

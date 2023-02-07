@@ -18,16 +18,12 @@ namespace SQuiz.Application.UnitTests.Quizzes.CreateQuiz
         public async Task CreateQUiz_WithValidEditQuizDto_ReturnsUnit()
         {
             // Assign
-            var createQuizCommand = new CreateQuizCommand()
+            var createQuizCommand = new CreateQuizCommand(new EditQuizDto()
             {
-                Model = new EditQuizDto()
-                {
-                    Description = "description",
-                    IsPublic = true,
-                    Name = "name"
-                },
-                UserId = "userId"
-            };
+                Description = "description",
+                IsPublic = true,
+                Name = "name"
+            }, "userId");
             var handler = new CreateQuizHandler(_services.GetMapper(), _services.QuizService, _services.QuizContext);
 
             //Act

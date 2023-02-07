@@ -1,0 +1,28 @@
+﻿@using SQuiz.Client.Services
+@using SQuiz.Shared.Dtos.Quiz
+
+@inject PublicClient Http
+
+<AddDialog OnSubmit="OnSubmit" >
+    <MudAutocomplete T="ModeratorDto" @bind-Value="_selectedModerator" SearchFunc="Search" AutoFocus Style="width: 500px;" 
+    Class="mx-auto"
+    ToStringFunc="x => x?.Name"/>
+</AddDialog>
+
+@code {
+    ModeratorDto? _selectedModerator;
+    
+    async Task<IEnumerable<ModeratorDto>> Search(string q)
+    {
+        var moderators = await Http.Client.GetFromJsonAsync<List<ModeratorDto>>($"Quizzes/moderators?q={q}");
+        return moderators ?? Enumerable.Empty<ModeratorDto>();
+    }
+
+    void OnSubmit(MudDialogInstance dialog)
+    {
+        if (_selectedModerator is ModeratorDto moderator)
+        {
+            dialog.Close(moderator);
+        }
+    }
+}

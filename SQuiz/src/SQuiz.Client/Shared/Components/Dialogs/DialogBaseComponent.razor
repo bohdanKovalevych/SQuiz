@@ -3,8 +3,8 @@
         @ChildContent
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Submit">@OkText</MudButton>
+        <MudButton OnClick="() => OnCancel.InvokeAsync(Dialog)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="() => OnSubmit.InvokeAsync(Dialog)">@OkText</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -21,14 +21,32 @@
     [Parameter]
     public string CancelText { get; set; } = "Cancel";
 
+    [Parameter]
+    public EventCallback<MudDialogInstance> OnSubmit { get; set; }
 
-    protected virtual void Submit()
+    [Parameter]
+    public EventCallback<MudDialogInstance> OnCancel { get; set; }
+
+    void DefaultSubmit(MudDialogInstance dialogInstance)
     {
-        Dialog.Close(DialogResult.Ok(true));
+        dialogInstance.Close(DialogResult.Ok(true));
     }
 
-    protected virtual void Cancel()
+    void DefaultCancel(MudDialogInstance dialogInstance)
     {
-        Dialog.Cancel();
+        dialogInstance.Cancel();
+    }
+
+    protected override void OnInitialized()
+    {
+        if (!OnSubmit.HasDelegate)
+        {
+            OnSubmit = new EventCallback<MudDialogInstance>(this, DefaultSubmit);
+        }
+
+        if (!OnCancel.HasDelegate)
+        {
+            OnCancel = new EventCallback<MudDialogInstance>(this, DefaultCancel);
+        }
     }
 }

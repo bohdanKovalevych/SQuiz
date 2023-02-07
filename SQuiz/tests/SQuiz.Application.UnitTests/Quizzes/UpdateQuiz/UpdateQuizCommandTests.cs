@@ -26,13 +26,7 @@ namespace SQuiz.Application.UnitTests.Quizzes.UpdateQuiz
         public async Task Handle_NotFoundQuiz_ReturnsNotFoundException()
         {
             // Arrange
-            var request = new UpdateQuizCommand()
-            {
-                Model = new EditQuizDto()
-                {
-                    Id = "100"
-                }
-            };
+            var request = new UpdateQuizCommand(new EditQuizDto() { Id = "100" });
             var quizDbSet = DbSetMockFactory.GetDbSetAsyncMock(new List<Quiz>());
             _service.QuizContext.Quizzes
                 .Returns(quizDbSet);
@@ -49,12 +43,10 @@ namespace SQuiz.Application.UnitTests.Quizzes.UpdateQuiz
         public async Task Handle_RemovesQuestionsAndAnswers()
         {
             // Arrange
-            var request = new UpdateQuizCommand()
+            var request = new UpdateQuizCommand(new EditQuizDto()
             {
-                Model = new EditQuizDto()
-                {
-                    Id = "1",
-                    Questions = new List<QuestionDto>()
+                Id = "1",
+                Questions = new List<QuestionDto>()
                     {
                         new QuestionDto()
                         {
@@ -68,8 +60,7 @@ namespace SQuiz.Application.UnitTests.Quizzes.UpdateQuiz
                             }
                         }
                     }
-                }
-            };
+            });
 
             Quiz quiz = new Quiz()
             {

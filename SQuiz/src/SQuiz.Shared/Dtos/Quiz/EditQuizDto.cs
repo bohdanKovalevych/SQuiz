@@ -7,12 +7,11 @@ namespace SQuiz.Shared.Dtos.Quiz
     {
         public string? Id { get; set; }
         public string Name { get; set; }
-
         public string? Description { get; set; }
-
         public bool IsPublic { get; set; } = false;
 
         public List<QuestionDto> Questions { get; set; } = new List<QuestionDto>();
+        public List<ModeratorDto> Moderators { get; set; } = new List<ModeratorDto>();
     }
 
     public class QuestionDto : IHasOrder

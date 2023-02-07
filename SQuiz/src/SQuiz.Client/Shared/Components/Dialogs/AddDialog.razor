@@ -1,0 +1,11 @@
+﻿<DialogBaseComponent OkText="Add" OnSubmit="OnSubmit">
+    @ChildContent
+</DialogBaseComponent>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+    
+    [Parameter]
+    public EventCallback<MudDialogInstance> OnSubmit { get; set; }
+}

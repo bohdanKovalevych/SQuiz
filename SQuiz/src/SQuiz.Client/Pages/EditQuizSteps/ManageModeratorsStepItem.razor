@@ -1,0 +1,69 @@
+﻿@using SQuiz.Client.Shared.Components.Dialogs
+@using SQuiz.Shared.Dtos.Quiz
+@using SQuiz.Client.Services
+
+@inject CrudDialogService CrudDialog
+
+<StepItem Title="Manage Moderators" Order="1">
+    <MudItem sm="9" md="6" Class="mx-auto">
+        <MudPaper>
+            <MudList>
+                <MudListSubheader>
+                    <MudMenu Label="Moderators" EndIcon="@Icons.Material.Filled.MoreVert">
+                        <MudMenuItem @onclick="AskToAddModerator" Icon="@Icons.Material.Filled.Add">
+                            Add Moderator
+                        </MudMenuItem>
+                    </MudMenu>
+                </MudListSubheader>
+
+                @foreach (var moderator in Model.Moderators)
+                {
+                    <MudListItem Value="moderator">
+                        <MudPaper Class="d-flex flex-row justify-space-between">
+                            <MudText Class="pa-1">@moderator.Name</MudText>
+                            <MudMenu Context="question" EndIcon="@Icons.Material.Filled.MoreVert">
+                                <MudMenuItem Icon="@Icons.Material.Filled.Delete" @onclick=@(() => RemoveModerator(moderator))>Remove</MudMenuItem>
+                            </MudMenu>
+                        </MudPaper>
+                    </MudListItem>
+                }
+            </MudList>
+        </MudPaper>
+    </MudItem>
+</StepItem>
+
+@code {
+    [CascadingParameter]
+    public QuizSteps Parent { get; set; }
+
+    public EditQuizDto Model => Parent.Model;
+
+    public EditQuizDto? InitialModel => Parent.InitialModel;
+
+    Task AskToAddModerator()
+    {
+        return CrudDialog.AskToAddItem<ModeratorDto, AddModeratorDialog>(OnAdded);
+    }
+
+    Task OnAdded(ModeratorDto moderator)
+    {
+        if (!Model.Moderators.Any(x => x.Id == moderator.Id))
+        {
+            Model.Moderators.Add(moderator);
+            StateHasChanged();
+        }
+        
+        return Task.CompletedTask;
+    }
+
+    async Task RemoveModerator(ModeratorDto moderator)
+    {
+        var accepted = await CrudDialog.AskToDeleteItem(moderator.Name ?? string.Empty, "moderator");
+        
+        if (accepted) 
+        {
+            Model.Moderators.Remove(moderator);
+            StateHasChanged();
+        }
+    }
+}

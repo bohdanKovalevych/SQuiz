@@ -9,6 +9,12 @@ namespace SQuiz.Application.Quizzes.CreateQuiz
 {
     public class CreateQuizCommand : IRequest
     {
+        public CreateQuizCommand(EditQuizDto model, string userId)
+        {
+            Model = model;
+            UserId = userId;
+        }
+
         public EditQuizDto Model { get; set; }
 
         public string UserId { get; set; }
@@ -41,11 +47,9 @@ namespace SQuiz.Application.Quizzes.CreateQuiz
 
             _quizContext.Quizzes.Add(quiz);
 
-            await _quizContext.SaveChangesAsync();
-
+            await _quizContext.SaveChangesAsync(cancellationToken);
             _quizService.SetCorrectAnswersFromModel(quiz, request.Model.Questions);
-
-            await _quizContext.SaveChangesAsync();
+            await _quizContext.SaveChangesAsync(cancellationToken);
 
             return Unit.Value;
         }

@@ -4,7 +4,8 @@
 @inject IThemeService ThemeService
 
 <MudThemeProvider Theme="MainTheme.Instance.Value" IsDarkMode="ThemeService.IsDarkMode" IsDarkModeChanged="IsDarkModeChanged" />
-<MudDialogProvider />
+<MudDialogProvider FullWidth="true"
+                   MaxWidth="MaxWidth.ExtraSmall" />
 <MudSnackbarProvider />
 
 <MudLayout>

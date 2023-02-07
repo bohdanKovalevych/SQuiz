@@ -14,8 +14,9 @@
     </SubHeaderContent>
     <ChildContent>
         <CascadingValue Value="this">
-            <QuizDetailStepItem></QuizDetailStepItem>
-            <ManageQuestionsStepItem></ManageQuestionsStepItem>
+            <QuizDetailStepItem/>
+            <ManageQuestionsStepItem/>
+            <ManageModeratorsStepItem/>
             @foreach (var question in Model.Questions.OrderBy(x => x.Order))
             {
                 <QuizQuestionStepItem Question="question"></QuizQuestionStepItem>
@@ -139,6 +140,7 @@
             Model.IsPublic = InitialModel.IsPublic;
             Model.Questions = InitialModel.Questions;
             Model.Description = InitialModel.Description;
+            Model.Moderators = InitialModel.Moderators;
         }
     }
 

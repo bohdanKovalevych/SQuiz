@@ -3,7 +3,7 @@
 @using SQuiz.Shared.Extensions
 @using MudBlazor.Utilities
 
-<StepItem Title="Manage Questions" Order="1">
+<StepItem Title="Manage Questions" Order="2">
     <MovableList 
         Items="Model.Questions"
         AddItemDelegate="AddItemDelegate"
@@ -23,7 +23,7 @@
 </StepItem>
 
 @code {
-    private const int QUESTION_START_INDEX = 2;
+    private const int QUESTION_START_INDEX = 3;
 
     [CascadingParameter]
     public QuizSteps Parent { get; set; }
