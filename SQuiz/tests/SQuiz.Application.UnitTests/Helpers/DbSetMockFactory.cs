@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using NSubstitute;
 using SQuiz.Application.UnitTests.Helpers.TestAsyncQuery;
 using SQuiz.Shared.Models.Interfaces;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace SQuiz.Application.UnitTests.Helpers
 {
@@ -28,6 +30,12 @@ namespace SQuiz.Application.UnitTests.Helpers
                     });
 
                 mockSet.When(s => s.AddAsync(Arg.Any<TEntity>()))
+                    .Do(callInfo =>
+                    {
+                        list.Add((TEntity)callInfo.Args()[0]);
+                    });
+
+                mockSet.When(s => s.Add(Arg.Any<TEntity>()))
                     .Do(callInfo =>
                     {
                         list.Add((TEntity)callInfo.Args()[0]);

@@ -36,10 +36,9 @@ namespace SQuiz.Application.Quizzes.GetModerators
             var moderators = await _quizContext.Moderators
                 .WithNameOrEmail(q)
                 .OrderBy(x => x.Name)
-                .ProjectTo<ModeratorDto>(_mapper.ConfigurationProvider)
                 .ToListAsync(cancellationToken);
 
-            return moderators;
+            return _mapper.Map<List<ModeratorDto>>(moderators);
         }
     }
 }
