@@ -2,7 +2,7 @@
 
 namespace SQuiz.Shared.Models
 {
-    public class PlayerAnswer : IEntity
+    public class PlayerAnswer : IEntity, IHasOrder
     {
         public string Id { get; set; }
 
@@ -13,5 +13,9 @@ namespace SQuiz.Shared.Models
         public Answer Answer { get; set; }
 
         public int Points { get; set; }
+        public int Order { get; set; }
+
+        public string? CorrectAnswerId { get; set; }
+        public Answer? CorrectAnswer { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using LanguageExt;
+﻿using AutoMapper;
+using LanguageExt;
 using LanguageExt.Common;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
@@ -27,11 +28,13 @@ namespace SQuiz.Application.Games.SendAnswer
     {
         private readonly ISQuizContext _context;
         private readonly IPointsCounter _pointsCounter;
+        private readonly IMapper _mapper;
 
-        public SendAnswerCommandHandler(ISQuizContext context, IPointsCounter pointsCounter)
+        public SendAnswerCommandHandler(ISQuizContext context, IPointsCounter pointsCounter, IMapper mapper)
         {
             _context = context;
             _pointsCounter = pointsCounter;
+            _mapper = mapper;
         }
 
         public async ValueTask<Result<ReceivedPointsDto>> Handle(SendAnswerCommand request, CancellationToken cancellationToken)
@@ -42,8 +45,8 @@ namespace SQuiz.Application.Games.SendAnswer
 
             var result = await (from question in GetQuestion(request)
                                 from points in CountPoints(request, question)
+                                from savedAnswer in SaveAnswer(request, points, question)
                                 from player in GetPlayer(request)
-                                from savedAnswer in SaveAnswer(request, points)
                                 select new { question, points, player })
                                 .Match(
                 x => GetReceivedPoints(request, x.question, x.points, x.player),
@@ -56,15 +59,14 @@ namespace SQuiz.Application.Games.SendAnswer
         {
             var question = await _context.Questions
                 .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Answers.Any(x => x.Id == request.Model.AnswerId));
+                .FirstOrDefaultAsync(x => x.Id == request.Model.QuestionId);
 
             return question ?? new Result<Question>(new NotFoundException());
         };
 
         private TryAsync<int> CountPoints(SendAnswerCommand request, Question question) => async () =>
         {
-            bool isCorrect = request.Model.AnswerId != null && await _context.Questions
-                .AnyAsync(x => x.CorrectAnswerId == request.Model.AnswerId);
+            bool isCorrect = request.Model.AnswerId != null && question.CorrectAnswerId == request.Model.AnswerId;
             int points = 0;
 
             if (isCorrect)
@@ -75,18 +77,23 @@ namespace SQuiz.Application.Games.SendAnswer
             return points;
         };
 
-        private TryAsync<Unit> SaveAnswer(SendAnswerCommand request, int points) => async () =>
+        private TryAsync<Unit> SaveAnswer(SendAnswerCommand request, int points, Question question) => async () =>
         {
             var playerAnswer = new PlayerAnswer()
             {
                 Id = Guid.NewGuid().ToString(),
                 AnswerId = request.Model.AnswerId,
                 PlayerId = request.PlayerId,
-                Points = points
+                Points = points,
+                CorrectAnswerId = question.CorrectAnswerId,
+                Order = question.Order,
             };
 
-            _context.PlayerAnswers.Add(playerAnswer);
-            await _context.SaveChangesAsync();
+            if (!await _context.PlayerAnswers.AnyAsync(x => x.PlayerId == request.PlayerId && x.Order == question.Order))
+            {
+                _context.PlayerAnswers.Add(playerAnswer);
+                await _context.SaveChangesAsync();
+            }
 
             return Unit.Value;
         };
@@ -98,7 +105,9 @@ namespace SQuiz.Application.Games.SendAnswer
                 CorrectAnswerId = question.CorrectAnswerId,
                 CurrentPoints = points,
                 SelectedAnswerId = request.Model.AnswerId,
-                TotalPoints = player.PlayerAnswers.Sum(x => x.Points)
+                TotalPoints = player.PlayerAnswers.Sum(x => x.Points),
+                GameShortId = player.QuizGame?.ShortId ?? 0,
+                Player = _mapper.Map<PlayerDto>(player) 
             };
 
             return receivedPoints;
@@ -108,6 +117,9 @@ namespace SQuiz.Application.Games.SendAnswer
         {
             return await _context.Players
                 .Include(x => x.PlayerAnswers)
+                .Include(x => x.QuizGame)
+                .Include(x => x.RegularQuizGame)
+                .Include(x => x.RegularQuizGame)
                 .FirstOrDefaultAsync(x => x.Id == request.PlayerId)
                 ?? new Result<Player>(new NotFoundException());
         };

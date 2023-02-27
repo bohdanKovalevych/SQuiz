@@ -18,7 +18,7 @@
                     <MudMenu 
                         Label="@Header" 
                         EndIcon="@Icons.Material.Filled.MoreVert">
-                        <MudMenuItem @onclick="AddItem">Add</MudMenuItem>
+                        <MudMenuItem OnClick="AddItem" OnTouch="AddItem">Add</MudMenuItem>
                     </MudMenu>
                 </MudListSubheader>
                 <MudDropZone T="TItem" Identifier="_" AllowReorder />

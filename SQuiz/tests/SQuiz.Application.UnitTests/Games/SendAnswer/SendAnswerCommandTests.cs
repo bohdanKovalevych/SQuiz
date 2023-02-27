@@ -15,7 +15,7 @@ namespace SQuiz.Application.UnitTests.Games.SendAnswer
         public SendAnswerCommandTests(ServiceFixture service)
         {
             _service = service;
-            _handler = new SendAnswerCommandHandler(_service.QuizContext, _service.PointsCounter);
+            _handler = new SendAnswerCommandHandler(_service.QuizContext, _service.PointsCounter, _service.GetMapper());
         }
 
         [Fact]
@@ -29,6 +29,7 @@ namespace SQuiz.Application.UnitTests.Games.SendAnswer
             var correctAnswerId = "1";
             var question = new Question()
             {
+                Id = "1",
                 CorrectAnswerId = correctAnswerId,
                 Answers = new List<Answer>() { new Answer() { Id = correctAnswerId } },
                 AnsweringTime = answeringTime,
@@ -39,13 +40,16 @@ namespace SQuiz.Application.UnitTests.Games.SendAnswer
                 Id = playerId,
                 PlayerAnswers = new List<PlayerAnswer>() { new PlayerAnswer() { Points = 2 }, new PlayerAnswer() { Points = 8 } }
             };
-            var dbSetQuestions = DbSetMockFactory.GetDbSetAsyncMock(new[] { question });
+            var dbSetQuestions = DbSetMockFactory.GetDbSetAsyncMock(new List<Question> { question });
             _service.QuizContext.Questions.Returns(dbSetQuestions);
-            var dbSetPlayers = DbSetMockFactory.GetDbSetAsyncMock(new[] { player });
+            var dbSetPlayers = DbSetMockFactory.GetDbSetAsyncMock(new List<Player>() { player });
             _service.QuizContext.Players.Returns(dbSetPlayers);
+            var dbSetPlayerAnswers = DbSetMockFactory.GetDbSetAsyncMock(new List<PlayerAnswer>());
+            _service.QuizContext.PlayerAnswers.Returns(dbSetPlayerAnswers);
+
 
             _service.PointsCounter.GetPoints(timeToSolve, answeringTime, points).Returns(8);
-            var command = new SendAnswerCommand(playerId, new SendAnswerDto() { AnswerId = question.Answers.First().Id, TimeToSolve = timeToSolve });
+            var command = new SendAnswerCommand(playerId, new SendAnswerDto("1") { AnswerId = question.Answers.First().Id, TimeToSolve = timeToSolve });
 
             // Act
             var result = await _handler.Handle(command, CancellationToken.None);
@@ -67,7 +71,7 @@ namespace SQuiz.Application.UnitTests.Games.SendAnswer
             // Arrange
             string playerId = Guid.NewGuid().ToString();
             var timeToSolve = TimeSpan.FromSeconds(5);
-            var command = new SendAnswerCommand(playerId, new SendAnswerDto { AnswerId = Guid.NewGuid().ToString(), TimeToSolve = timeToSolve });
+            var command = new SendAnswerCommand(playerId, new SendAnswerDto("1") { AnswerId = Guid.NewGuid().ToString(), TimeToSolve = timeToSolve });
 
             // Act
             var result = await _handler.Handle(command, CancellationToken.None);

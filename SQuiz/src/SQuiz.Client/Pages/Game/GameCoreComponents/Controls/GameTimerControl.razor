@@ -25,7 +25,7 @@
         StateHasChanged();
     }
 
-    public Task OnTimeEnd()
+    public Task OnTimeEnd(bool answered)
     {
         _elapsedTime = 0.0;
         StateHasChanged();

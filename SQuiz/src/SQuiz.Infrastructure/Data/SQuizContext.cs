@@ -27,6 +27,8 @@ namespace SQuiz.Infrastructure.Data
         public virtual DbSet<Moderator> Moderators { get; set; }
         public virtual DbSet<QuizModerator> QuizModerators { get; set; }
         public virtual DbSet<QuizGame> QuizGames { get; set; }
+        public virtual DbSet<RegularQuizGame> RegularQuizGames { get; set; }
+        public virtual DbSet<RealtimeQuizGame> RealtimeQuizGames { get; set; }
         public virtual DbSet<Player> Players { get; set; }
         public virtual DbSet<PlayerAnswer> PlayerAnswers { get; set; }
 

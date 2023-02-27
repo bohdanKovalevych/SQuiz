@@ -1,0 +1,20 @@
+﻿@using SQuiz.Client.Services
+@using SQuiz.Shared.Dtos.Quiz
+
+@inject PublicClient Http
+
+<AddDialog OnSubmit="OnSubmit" OkText="Start realtime game">
+    <MudTextField T="string" @bind-Text="_name" AutoFocus Label="name for your realtime game" />
+</AddDialog>
+
+@code {
+    string? _name;
+
+    void OnSubmit(MudDialogInstance dialog)
+    {
+        if (_name is string notNullName)
+        {
+            dialog.Close(_name);
+        }
+    }
+}

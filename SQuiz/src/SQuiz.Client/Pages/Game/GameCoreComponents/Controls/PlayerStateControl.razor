@@ -1,0 +1,28 @@
+﻿@using SQuiz.Client.Pages.Game.Animations
+@using SQuiz.Shared.Dtos.Game
+
+@if (!HidePlayerState)
+{
+    <ShowScoreForQuestionAnimation />
+    <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.ChildCare">
+        <MudText Typo="Typo.h5">Total points: @(ReceivedPoints?.TotalPoints ?? 0) </MudText>
+    </MudAlert>
+
+    @if (AnsweredState && ReceivedPoints != null)
+    {
+        <MudAlert Severity=@(ReceivedPoints.CurrentPoints > 0 ? Severity.Success : Severity.Error)>
+            You got @ReceivedPoints.CurrentPoints points.
+        </MudAlert>
+    }
+}
+
+@code {
+    [Parameter]
+    public bool HidePlayerState { get; set; }
+
+    [Parameter]
+    public bool AnsweredState { get; set; }
+
+    [Parameter]
+    public ReceivedPointsDto? ReceivedPoints { get; set; }
+}

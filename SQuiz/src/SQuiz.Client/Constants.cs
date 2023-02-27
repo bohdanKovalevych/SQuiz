@@ -10,6 +10,7 @@
             public const string PreviewAllQuestions = nameof(PreviewAllQuestions);
             public const string QuizStepsState = nameof(QuizStepsState);
             public const string Game = nameof(Game);
+            public const string GameStarted = nameof(GameStarted);
             public const string IsDarkMode = nameof(IsDarkMode);
         }
 
@@ -17,6 +18,11 @@
         {
             public const string PlayerId = nameof(PlayerId);
             public const string QuestionIndex = nameof(QuestionIndex);
+        }
+
+        public static class HeadersKey
+        {
+            public const string ResponseEntityType = nameof(ResponseEntityType);
         }
 
     }

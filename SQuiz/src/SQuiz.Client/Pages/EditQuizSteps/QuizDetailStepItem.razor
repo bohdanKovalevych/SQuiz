@@ -57,7 +57,7 @@
     async Task GoToPreviewQuiz()
     {
         await Parent.SaveCurrentState();
-        var game = new GameOptionDto()
+        var game = new RegularGameOptionDto()
         {
             QuestionCount = Model.Questions.Count,
             Name = Model.Name

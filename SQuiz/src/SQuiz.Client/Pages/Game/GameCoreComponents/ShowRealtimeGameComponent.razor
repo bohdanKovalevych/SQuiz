@@ -1,0 +1,32 @@
+﻿@using SQuiz.Shared.Dtos.Game
+
+<MudAlert Class="pa-3 m-1">'@Game?.Name'.</MudAlert>
+<MudAlert Severity="Severity.Info" class="pa-3 m-1">Game contains @(Game?.QuestionCount) questions.</MudAlert>
+<MudAlert Severity="Severity.Info" class="pa-3 m-1">Wait for quiz start.</MudAlert>
+<MudList>
+    <MudListSubheader>
+        Players
+    </MudListSubheader>
+    @if (Players != null)
+    {
+        @foreach (var player in Players)
+        {
+            <MudListItem Class=@(Player?.Id == player.Id ? "green-text" : "")>
+                <MudBadge Color="Color.Success" Visible="player.IsOnline" Dot>
+                    @player.Name
+                </MudBadge>
+            </MudListItem>
+        }
+    }
+</MudList>
+
+@code {
+    [Parameter]
+    public RealtimeGameOptionDto? Game { get; set; }
+
+    [Parameter]
+    public List<PlayerDto>? Players { get; set; }
+
+    [Parameter]
+    public PlayerDto? Player { get; set; }
+}

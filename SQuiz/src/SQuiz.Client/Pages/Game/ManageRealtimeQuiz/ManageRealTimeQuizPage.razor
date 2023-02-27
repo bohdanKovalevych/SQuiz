@@ -1,0 +1,248 @@
+﻿@page "/run-quiz/{QuizGameShortId}"
+@layout PlayerLayout
+@using SQuiz.Client.Interfaces
+@using SQuiz.Client.Pages.Game.GameCoreComponents
+@using SQuiz.Client.Pages.Game.GameCoreComponents.Controls
+@using SQuiz.Client.Services
+@using SQuiz.Shared.Dtos.Game
+@using SQuiz.Shared.Extensions
+@using System.Net
+@using SQuiz.Shared.Interfaces
+
+@implements IAsyncDisposable
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject IPlayGameService PlayGameService
+@inject IManageRealtimeQuizHubClient ManageQuizHubClient
+@inject IRealtimeQuizHubClient QuizHubClient
+@inject IPlayRealtimeGameService PlayGameService
+@inject ISnackbar SnackbarService
+@inject IInitGameService InitGameServcie
+@inject ISessionStorageService SessionStorage
+
+<LoadingWrapper WaitFor="_game">
+    @if(!_gameStarted)
+    {
+        <ModeratorShowRealtimeGameComponent 
+            Game="_game" 
+            OnStart="StartQuiz"
+            Players="_players"/>
+    }
+    else 
+    {
+        <MudTabs KeepPanelsAlive>
+            <MudAlert>@_playersAnswered players answered</MudAlert>
+            <MudTabPanel Text="Quiz">
+                <PlayGameComponent
+                    AnsweredState="_answeredState"
+                    ReceivedPoints="_receivedPoints"
+                    DisableToAnswer="true"
+                    HideNextButton="false"
+                    HidePlayerState="true"
+                    OtherReceivedPoints="_allReceivedPoints"
+                    GetQuestionDelegate="GetQuestionDelegate" />
+            </MudTabPanel>
+            <MudTabPanel Text="Scores" Disabled="!_answeredState">
+                <MudList>
+                    <MudListSubheader>
+                        Scores
+                    </MudListSubheader>
+                    @if (_allReceivedPoints != null)
+                    {
+                        @foreach (var player in _allReceivedPoints)
+                        {
+                            <PlayerScoreListItemControl ReceivedPoints="player"/>
+                        }
+                    }
+                </MudList>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</LoadingWrapper>
+
+@code {
+    int _playersAnswered;
+    bool _answeredState;
+    bool _gameStarted;
+    ReceivedPointsDto? _receivedPoints;
+    List<ReceivedPointsDto>? _allReceivedPoints;
+    RealtimeGameOptionDto? _game { get; set; }
+    TaskCompletionSource<GameQuestionDto?>? _questionSource;
+    List<PlayerDto> _players { get; set; } = new List<PlayerDto>();
+
+    [Parameter]
+    public string? QuizGameShortId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (QuizGameShortId is string notNullQuizGameShortId
+        && await GetRealtimeQuizGameAsync(notNullQuizGameShortId) is RealtimeGameOptionDto notNullGame)
+        {
+            _game = notNullGame;
+            SubscribeHubHandlers();
+            await InitPlayers();
+            await ManageQuizHubClient.StartAsync();
+            await QuizHubClient.StartAsync();
+            await QuizHubClient.QuizHub.JoinToGameEvents(_game.ShortId);
+            _gameStarted = await SessionStorage.GetItemAsync<bool>(Constants.SessionStorageKey.GameStarted);
+
+            return;
+        }
+
+        Nav.NavigateTo(Nav.BaseUri);
+    }
+
+    async Task InitPlayers()
+    {
+        if (_game != null &&
+            await Http.GetFromJsonAsync<List<PlayerDto>>($"Games/scores/{_game.ShortId}") 
+            is List<PlayerDto> players)
+        {
+            _players = players;
+        }
+    }
+
+    async Task StartQuiz()
+    {
+        if (_game != null)
+        {
+            await SessionStorage.SetItemAsync(Constants.SessionStorageKey.GameStarted, true);
+            _gameStarted = true;
+
+            _game.CurrentQuestionIndex = 0;
+            await Http.PutAsJsonAsync($"ManageRealtimeGames/{_game.QuizId}", _game);
+        }
+    }
+
+    async Task<GameQuestionDto?> GetQuestionDelegate()
+    {
+        if (_game != null)
+        {
+            _answeredState = false;
+            _questionSource = new TaskCompletionSource<GameQuestionDto?>();
+            await ManageQuizHubClient.QuizHub.NextQuestion(_game.ShortId);
+            var result = await _questionSource.Task;
+            return result;
+        }
+
+        return null;
+    }
+
+    void SubscribeHubHandlers()
+    {
+        PlayGameService.OnError += OnError;
+        PlayGameService.OnPlayerJoined += OnPlayerJoined;
+        PlayGameService.OnPlayerLeft += OnPlayerLeft;
+        PlayGameService.OnGetQuestion += OnGetQuestion;
+        PlayGameService.OnTimeEnd += OnTimeEnd;
+        PlayGameService.OnOtherReceivedPoints += OnOtherReceivedPoints;
+        PlayGameService.OnAllPlayersAnswered += OnAllPlayersAnswered;
+        PlayGameService.OnQuizEnded += OnQuizEnded;
+        Nav.LocationChanged += OnLocationChanged;
+    }
+
+    void UnsubscribeHubHandlers()
+    {
+        PlayGameService.OnError -= OnError;
+        PlayGameService.OnPlayerJoined -= OnPlayerJoined;
+        PlayGameService.OnPlayerLeft -= OnPlayerLeft;
+        PlayGameService.OnGetQuestion -= OnGetQuestion;
+        PlayGameService.OnTimeEnd -= OnTimeEnd;
+        PlayGameService.OnOtherReceivedPoints -= OnOtherReceivedPoints;
+        PlayGameService.OnAllPlayersAnswered -= OnAllPlayersAnswered;
+        PlayGameService.OnQuizEnded -= OnQuizEnded;
+        Nav.LocationChanged -= OnLocationChanged;
+    }
+
+    Task OnQuizEnded()
+    {
+        if (_game != null)
+        {
+            Nav.NavigateTo($"/gameScores/{_game.ShortId}");
+        }
+
+        return Task.CompletedTask;
+    }
+
+    void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (!e.Location.Contains("/run-quiz"))
+        {
+            SessionStorage.RemoveItemAsync(Constants.SessionStorageKey.GameStarted);
+        }
+    }
+
+    void OnError(string? error)
+    {
+        SnackbarService.Add(error);
+    }
+
+    Task OnPlayerJoined(PlayerDto player)
+    {
+        _players.Add(player);
+        SnackbarService.Add($"user with name {player.Name} joined");
+        StateHasChanged();
+
+        return Task.CompletedTask;
+    }
+
+    Task OnPlayerLeft(PlayerDto player)
+    {
+        _players.RemoveAll(x => x.Name == player.Name);
+        SnackbarService.Add($"user with name {player.Name} left");
+        StateHasChanged();
+
+        return Task.CompletedTask;
+    }
+
+    void OnGetQuestion(GameQuestionDto question)
+    {
+        _answeredState = false;
+        _playersAnswered = 0;
+        _questionSource?.TrySetResult(question);
+        StateHasChanged();
+    }
+
+    async Task OnTimeEnd(bool answered)
+    {
+        _answeredState = true;
+
+        if (_game != null && !answered)
+        {
+            await ManageQuizHubClient.QuizHub.TimeEnd(_game.ShortId);
+        }
+
+        StateHasChanged();
+    }
+
+    void OnOtherReceivedPoints(ReceivedPointsDto points)
+    {
+        ++_playersAnswered;
+        StateHasChanged();
+    }
+
+    void OnAllPlayersAnswered(List<ReceivedPointsDto> allPoints, string correctAnswerId)
+    {
+        _answeredState = true;
+        _allReceivedPoints = allPoints;
+        _receivedPoints = new ReceivedPointsDto()
+        {
+            CorrectAnswerId = correctAnswerId
+        };
+
+        PlayGameService.StopTimer();
+    }
+
+    private async Task<RealtimeGameOptionDto?> GetRealtimeQuizGameAsync(string quizGameShortId)
+    {
+        var game = await Http.GetFromJsonAsync<RealtimeGameOptionDto>($"ManageRealtimeGames/{quizGameShortId}");
+        return game;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        UnsubscribeHubHandlers();
+        await ManageQuizHubClient.StopAsync();
+        await QuizHubClient.StopAsync();
+    }
+}

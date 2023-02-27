@@ -1,17 +1,21 @@
-﻿@using SQuiz.Client.Interfaces
+﻿@using Microsoft.AspNetCore.WebUtilities
+@using SQuiz.Client.Interfaces
 @using SQuiz.Client.Services
+@using SQuiz.Client.Services.JoinGameStrategies
 @using SQuiz.Shared.Dtos.Game
 @using System.Net
+@using System.Text.Json
 @inject IInitGameService InitGameService
 @inject PublicClient Http
 @inject NavigationManager Nav
 @inject ISessionStorageService SessionStorage
+@inject IJoinGameProcessor JoinGameProcessor
 
 @implements IDisposable
 
 <Steps Title="Play quiz" @ref="Steps" Class="@Class">
     <SubHeaderContent>
-        <p class="alert-danger">@ErrorMessage</p>
+        <p class="red-text">@ErrorMessage</p>
     </SubHeaderContent>
     <ChildContent>
         <StepItem Title="Write code">
@@ -27,18 +31,35 @@
 </Steps>
 
 @code {
+    const string GAME_CODE_KEY = "game";
+    Func<JoinGameDto, Task<string?>>? _joinGameDelegate;
     public Steps? Steps { get; set; }
     public GameOptionDto? Game { get; set; }
     public string? ErrorMessage;
-    
+
     [Parameter]
     public string? Class { get; set; }
-    
+
     protected override void OnInitialized()
     {
         InitGameService.PlayerNameChosen += PlayerNameChosen;
         InitGameService.GameCodeChosen += GameCodeChosen;
         InitGameService.JoinedWithExistingId += PlayerJoinedWithExistingId;
+        InitFromQuery();
+    }
+
+    void InitFromQuery()
+    {
+        var uri = new Uri(Nav.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+
+        if (query.TryGetValue(GAME_CODE_KEY, out var gameCodeStrings) 
+            && gameCodeStrings.Any()
+            && gameCodeStrings[0] is string gameCodeString
+            && int.TryParse(gameCodeString, out int gameCode))
+        {
+            InitGameService.ChooseGameCode(gameCode);
+        }
     }
 
     public async Task GameCodeChosen(int code)
@@ -47,18 +68,37 @@
         int navigateToIndex = 0;
 
         try {
-            Game = await Http.Client.GetFromJsonAsync<GameOptionDto>($"Games/{code}");
+
+            var result = await Http.Client.GetAsync($"Games/{code}");
+            var className = result.Headers.GetValues(Constants.HeadersKey.ResponseEntityType)?.First();
+
+            if (className == typeof(RealtimeGameOptionDto).FullName)
+            {
+                Game = await result.Content.ReadFromJsonAsync<RealtimeGameOptionDto>();
+                _joinGameDelegate = dto => JoinGameProcessor.JoinGame<RealtimeGameOptionDto>(dto);
+            }
+            else if (className == typeof(RegularGameOptionDto).FullName)
+            {
+                Game = await result.Content.ReadFromJsonAsync<RegularGameOptionDto>();
+                _joinGameDelegate = dto => JoinGameProcessor.JoinGame<RegularGameOptionDto>(dto);
+            }
+
+            if (Game?.IsBlocked ?? false)
+            {
+                ErrorMessage = $"Game by code {code} is blocked now";
+                return;
+            }
+
             navigateToIndex = 1;
+            Nav.NavigateTo(Nav.GetUriWithQueryParameter(GAME_CODE_KEY, Game?.ShortId.ToString()));
             await SessionStorage.SetItemAsync(Constants.SessionStorageKey.Game, Game);
         }
-        catch (Exception)
+        catch (Exception e)
         {
             ErrorMessage = $"Game was not found by code {code}";
             Steps?.RemoveByIndex(1);
             Game = null;
             await SessionStorage.RemoveItemAsync(Constants.SessionStorageKey.Game);
-
-            return;
         }
         finally
         {
@@ -70,17 +110,19 @@
 
     public async Task PlayerNameChosen(string name)
     {
-        var result = await Http.Client.PostAsJsonAsync("Games/join",
-            new JoinGameDto() { Name = name, ShortId = Game.ShortId });
-
-        if (!result.IsSuccessStatusCode)
+        if (_joinGameDelegate == null)
         {
-            ErrorMessage = await result.Content.ReadAsStringAsync();
-            StateHasChanged();
             return;
         }
-        Nav.NavigateTo("play/showGame");
 
+        var command = new JoinGameDto() { Name = name, ShortId = Game.ShortId };
+        var errorMessage = await _joinGameDelegate(command);
+        
+        if (errorMessage != null)
+        {
+            ErrorMessage = errorMessage;
+            StateHasChanged();
+        }
     }
 
     public async Task PlayerJoinedWithExistingId(string id)

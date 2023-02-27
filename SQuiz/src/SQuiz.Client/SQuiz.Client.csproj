@@ -8,16 +8,24 @@
 
   <ItemGroup>
     <None Include="Pages\EditQuizSteps\QuizSteps.razor" />
+    <None Include="Pages\Game\GameCoreComponents\Controls\PlayerScoreListItemControl.razor" />
+    <None Include="Pages\Game\ManageRealtimeQuiz\ManageRealTimeQuizPage.razor" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Majorsoft.Blazor.Extensions.BrowserStorage" Version="1.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.13" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="6.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
     <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="6.0.13" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
 	<PackageReference Include="MudBlazor" Version="6.1.7" />
+	<PackageReference Include="Stateless" Version="5.13.0" />
+	<PackageReference Include="TypedSignalR.Client" Version="3.3.0">
+	  <PrivateAssets>all</PrivateAssets>
+	  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	</PackageReference>
   </ItemGroup>
 
   <ItemGroup>

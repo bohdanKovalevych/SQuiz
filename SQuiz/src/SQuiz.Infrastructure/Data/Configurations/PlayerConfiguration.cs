@@ -10,7 +10,7 @@ namespace SQuiz.Infrastructure.Data.Configurations
         {
             builder.Property(x => x.Id)
                 .ValueGeneratedNever()
-                .HasColumnType("char(36)");
+                .HasColumnType("nvarchar(200)");
 
             builder.Property(x => x.ShortId)
               .HasDefaultValueSql($"NEXT VALUE FOR {builder.Metadata.GetTableName()}_shortId_seq");
@@ -20,6 +20,20 @@ namespace SQuiz.Infrastructure.Data.Configurations
 
             builder.Property(x => x.UserId)
                 .HasColumnType("nvarchar(200)");
+
+            builder.HasOne(x => x.QuizGame)
+                .WithMany(x => x.Players)
+                .HasForeignKey(x => x.QuizGameId);
+
+            builder.HasOne(x => x.RealtimeQuizGame)
+                .WithMany()
+                .HasForeignKey(x => x.RealtimeQuizGameId)
+                .IsRequired(false);
+
+            builder.HasOne(x => x.RegularQuizGame)
+                .WithMany()
+                .HasForeignKey(x => x.RegularQuizGameId)
+                .IsRequired(false);
         }
     }
 }

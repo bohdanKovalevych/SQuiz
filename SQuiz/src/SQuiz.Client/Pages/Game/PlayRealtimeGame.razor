@@ -1,0 +1,158 @@
+﻿@using SQuiz.Client.Interfaces
+@using SQuiz.Client.Pages.Game.GameCoreComponents
+@using SQuiz.Client.Pages.Game.GameCoreComponents.Controls
+@using SQuiz.Client.Services
+@using SQuiz.Shared.Dtos.Game
+@using SQuiz.Shared.Extensions
+@using System.Net
+@using SQuiz.Shared.Interfaces
+
+@implements IAsyncDisposable
+@inject PublicClient Http
+@inject NavigationManager Nav
+@inject IPlayRealtimeGameService PlayGameService
+@inject IRealtimeQuizHubClient HubClient
+@inject ICookieStoreService CookieStoreService
+@inject ICurrentRealtimePlayerService CurrentRealtimePlayerService
+
+<MudTabs @bind-ActivePanelIndex="_activePanelIndex" KeepPanelsAlive>
+    <MudTabPanel Text="Quiz">
+        <MudAlert>@_playersAnswered players answered</MudAlert>
+        @if(_needWaitForOthers && _answeredState)
+        {
+            <MudText>Wait for others</MudText>
+        }
+        <MudText>Player: @_player?.Name</MudText>
+        <PlayGameComponent 
+            @ref="_game"
+            ReceivedPoints="_receivedPoints"
+            AnsweredState="_answeredState"
+            OtherReceivedPoints="_allReceivedPoints"
+            GetQuestionDelegate="GetQuestion"
+            DisableToAnswer="false"
+            HideNextButton="true"
+            HidePlayerState="false"/>
+        
+    </MudTabPanel>
+    <MudTabPanel Text="Scores" Disabled="!_answeredState">
+        <MudList>
+            <MudListSubheader>
+                Scores
+            </MudListSubheader>
+            @if (_allReceivedPoints != null)
+            {
+                @foreach (var player in _allReceivedPoints)
+                {
+                    <PlayerScoreListItemControl
+                        ReceivedPoints="player"/>
+                }
+            }
+        </MudList>
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    bool _answeredState;
+    bool _needWaitForOthers;
+    int _playersAnswered;
+    int _activePanelIndex;
+    ReceivedPointsDto? _receivedPoints;
+    List<ReceivedPointsDto>? _allReceivedPoints;
+    PlayGameComponent? _game;
+    PlayerDto? _player;
+    GameQuestionDto? _question;
+    TaskCompletionSource<GameQuestionDto?>? _questionSource;
+
+    public async Task<GameQuestionDto?> GetQuestion()
+    {
+        _questionSource ??= new TaskCompletionSource<GameQuestionDto?>();
+        _question = await _questionSource.Task;
+        _answeredState = false;
+        _questionSource = null;
+        return _question;
+    }
+
+    async Task OnAnswered(SendAnswerDto answer)
+    {
+        await HubClient.QuizHub.AnswerQuestion(answer);
+    }
+
+    void OnGetQuestion(GameQuestionDto? question)
+    {
+        _questionSource = new TaskCompletionSource<GameQuestionDto?>();
+        _questionSource?.TrySetResult(question);
+        _activePanelIndex = 0;
+        _playersAnswered = 0;
+        _game?.NextQuestion().AndForget();
+        StateHasChanged();
+    }
+
+    void OnReceivedPoints(ReceivedPointsDto receivedPoints)
+    {
+        _receivedPoints = receivedPoints;
+        _needWaitForOthers = true;
+        _answeredState = true;
+        ++_playersAnswered;
+
+        StateHasChanged();
+    }
+
+    void OnOtherReceivedPoints(ReceivedPointsDto receivedPoints)
+    {
+        ++_playersAnswered;
+        StateHasChanged();
+    }
+
+    void OnAllReceivedPoints(List<ReceivedPointsDto> allReceivedPoints, string correctAnswerId)
+    {
+        _needWaitForOthers = false;
+        _allReceivedPoints = allReceivedPoints;
+        StateHasChanged();
+    }
+
+    Task OnQuizEnded()
+    {
+        if (CurrentRealtimePlayerService.CurrentGame != null)
+        {
+            Nav.NavigateTo($"/gameScores/{CurrentRealtimePlayerService.CurrentGame.ShortId}");
+        }
+
+        return Task.CompletedTask;
+    }
+
+    async Task OnTimeEnd(bool answered)
+    {
+        if (_question != null && !answered)
+        {
+            await OnAnswered(new SendAnswerDto(_question.Id));
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PlayGameService.OnAnswered += OnAnswered;
+        PlayGameService.OnGetQuestion += OnGetQuestion;
+        PlayGameService.OnReceivedPoints += OnReceivedPoints;
+        PlayGameService.OnAllPlayersAnswered += OnAllReceivedPoints;
+        PlayGameService.OnOtherReceivedPoints += OnOtherReceivedPoints;
+        PlayGameService.OnQuizEnded += OnQuizEnded;
+        PlayGameService.OnTimeEnd += OnTimeEnd;
+        await CurrentRealtimePlayerService.InitCurrentPlayerAsync();
+        _player = CurrentRealtimePlayerService.CurrentPlayer;
+        
+        await HubClient.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        PlayGameService.OnAnswered -= OnAnswered;
+        PlayGameService.OnGetQuestion -= OnGetQuestion;
+        PlayGameService.OnReceivedPoints -= OnReceivedPoints;
+        PlayGameService.OnAllPlayersAnswered -= OnAllReceivedPoints;
+        PlayGameService.OnOtherReceivedPoints -= OnOtherReceivedPoints;
+        PlayGameService.OnTimeEnd -= OnTimeEnd;
+        PlayGameService.OnQuizEnded -= OnQuizEnded;
+
+        await HubClient.StopAsync();
+    }
+}

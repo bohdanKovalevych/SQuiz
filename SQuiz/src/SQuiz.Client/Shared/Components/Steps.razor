@@ -125,7 +125,10 @@
 
     public void RemoveByIndex(int index)
     {
-        StepItems.RemoveAt(index);
+        if (index >= 0 && index < StepItems.Count)
+        {
+            StepItems.RemoveAt(index);
+        }
 
         StateHasChanged();
     }

@@ -1,4 +1,5 @@
 ﻿@using SQuiz.Client.Pages.Game.Animations
+@using SQuiz.Client.Pages.Game.GameCoreComponents.Controls
 @using SQuiz.Shared.Dtos.Game
 @using SQuiz.Shared.Extensions
 @using SQuiz.Shared.Interfaces
@@ -6,82 +7,91 @@
 @implements IDisposable
 @inject IPlayGameService PlayGameService
 
-<style>
-    .mud-button-root:disabled {
-        color: white !important;
-    }
-    .mud-button-root:hover {
-        color: var(--mud-palette-success) !important;
-    }
-    .rounded {
-        border-radius: 10px !important;
-    }
-</style>
-
-<LoadingWrapper WaitFor="_question">
-    <PrepareForQuestionAnimation />
-    <ShowScoreForQuestionAnimation />
-    <MudCard>
-        <MudCardHeader Class="flex-column align-stretch gap-2">
-            <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.ChildCare">
-                <MudText Typo="Typo.h5">Total points: @(_receivedPoints?.TotalPoints ?? 0) </MudText>
-            </MudAlert>
-            <MudAlert Severity="Severity.Info">
-                <MudText Typo="Typo.h5">@(_question?.Order + 1). @_question?.QuestionText</MudText>
-            </MudAlert>
-            @if (_answeredState)
-            {
-                <MudAlert Severity=@(_receivedPoints.CurrentPoints > 0 ? Severity.Success : Severity.Error)>
-                    You got @_receivedPoints.CurrentPoints points.
+@if (!Hide)
+{
+    <LoadingWrapper WaitFor="_question">
+        <PrepareForQuestionAnimation />
+        <MudCard>
+            <MudCardHeader Class="flex-column align-stretch gap-2">
+                <PlayerStateControl AnsweredState="AnsweredState"
+                                HidePlayerState="HidePlayerState"
+                                ReceivedPoints="ReceivedPoints" />
+                <MudAlert Severity="Severity.Info">
+                    <MudText Typo="Typo.h5">@(_question?.Order + 1). @_question?.QuestionText</MudText>
                 </MudAlert>
-            }
-        </MudCardHeader>
-        <MudCardContent>
-            <MudGrid Justify="Justify.SpaceEvenly">
-                @foreach (var (answer, index) in _question?.Answers.WithIndex()
-                ?? new List<GameAnswerDto>().WithIndex())
+            </MudCardHeader>
+            <MudCardContent>
+                <MudGrid Justify="Justify.SpaceEvenly">
+                    @foreach (var (answer, index) in _question?.Answers.WithIndex()
+                   ?? Array.Empty<GameAnswerDto>().WithIndex())
+                    {
+                        <AnswerOptionControl 
+                            Answer="answer" 
+                            OtherReceivedPoints="OtherReceivedPoints"
+                            ReceivedPoints="ReceivedPoints" 
+                            SendAnswer="SendAnswer" 
+                            AnsweredState="AnsweredState" 
+                            Disabled="AnsweredState || DisableToAnswer" />
+                    }
+                </MudGrid>
+            </MudCardContent>
+            <MudCardActions>
+                <GameTimerControl />
+                @if (AnsweredState && !HideNextButton)
                 {
-                    <AnswerOptionControl Answer="answer" ReceivedPoints="_receivedPoints" SendAnswer="SendAnswer" AnsweredState="_answeredState" />
+                    <MudFab EndIcon="@Icons.Material.Filled.NavigateNext"
+                        Label="next"
+                        Class="ma-1"
+                        @onclick="NextQuestion" />
                 }
-            </MudGrid>
-        </MudCardContent>
-        <MudCardActions>
-            <GameTimer />
-            @if (_answeredState)
-            {
-                <MudFab EndIcon="@Icons.Material.Filled.NavigateNext"
-                    Label="next"
-                    Class="ma-1"
-                    @onclick="NextQuestion" />
-            }
-        </MudCardActions>
-    </MudCard>
-</LoadingWrapper>
+            </MudCardActions>
+        </MudCard>
+    </LoadingWrapper>
+}
+
 
 @code {
     GameQuestionDto? _question;
-    ReceivedPointsDto? _receivedPoints;
-    bool _answeredState;
 
     [Parameter]
-    public Func<Task<GameQuestionDto?>> GetQuestionDelegate { get; set; }
+    public ReceivedPointsDto? ReceivedPoints { get; set; }
+
+    [Parameter]
+    public List<ReceivedPointsDto>? OtherReceivedPoints { get; set; }
+
+    [Parameter]
+    public bool AnsweredState { get; set; }
+
+    [Parameter]
+    public Func<Task<GameQuestionDto?>>? GetQuestionDelegate { get; set; }
+
+    [Parameter]
+    public bool HideNextButton { get; set; }
+
+    [Parameter]
+    public bool HidePlayerState { get; set; }
+
+    [Parameter]
+    public bool DisableToAnswer { get; set; }
+
+    [Parameter]
+    public bool Hide { get; set; }
 
     void OnPrepared()
     {
         PlayGameService.StartTimer();
     }
 
-    void OnReceivedPoints(ReceivedPointsDto points)
-    {
-        _receivedPoints = points;
-        _answeredState = true;
-        StateHasChanged();
-    }
-
     async Task GetQuestion()
     {
         _question = null;
         StateHasChanged();
+        
+        if (GetQuestionDelegate == null)
+        {
+            throw new ArgumentNullException();
+        }
+
         _question = await GetQuestionDelegate();
 
         if (_question == null)
@@ -94,11 +104,11 @@
         StateHasChanged();
     }
 
-    async Task NextQuestion()
+    public async Task NextQuestion()
     {
         await GetQuestion();
         PlayGameService.DelayToPrepareForQuestion();
-        _answeredState = false;
+        AnsweredState = false;
         StateHasChanged();
     }
 
@@ -110,7 +120,6 @@
     protected override async Task OnInitializedAsync()
     {
         PlayGameService.OnPrepared += OnPrepared;
-        PlayGameService.OnReceivedPoints += OnReceivedPoints;
         await GetQuestion();
         PlayGameService.DelayToPrepareForQuestion();
     }
@@ -118,7 +127,6 @@
     public void Dispose()
     {
         PlayGameService.OnPrepared -= OnPrepared;
-        PlayGameService.OnReceivedPoints -= OnReceivedPoints;
         PlayGameService.EndQuiz();
     }
 }

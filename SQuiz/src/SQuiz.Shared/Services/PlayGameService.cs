@@ -12,6 +12,7 @@ namespace SQuiz.Shared.Services
         private double _currentSeconds;
         private double _delayToPrepare = 4000;
         private double _gameTimeUint = 100;
+        private GameQuestionDto? _gameQuestion;
 
         public PlayGameService()
         {
@@ -32,6 +33,7 @@ namespace SQuiz.Shared.Services
         {
             CurrentMaxTime = _maxSeconds[questionDto.AnsweringTime];
             _currentSeconds = CurrentMaxTime;
+            _gameQuestion = questionDto;
         }
 
         public void DelayToPrepareForQuestion()
@@ -45,16 +47,32 @@ namespace SQuiz.Shared.Services
             _gameTimer.Start();
         }
 
+        public void StopTimer()
+        {
+            _gameTimer.Stop();
+            
+            if (OnTimeEnd != null)
+            {
+                OnTimeEnd?.Invoke(true);
+            }
+        }
+
         public async Task SendAnswer(string? answerId)
         {
             _gameTimer.Stop();
+            
             if (OnAnswered != null)
             {
-                await OnAnswered(new SendAnswerDto()
+                await OnAnswered(new SendAnswerDto(_gameQuestion.Id)
                 {
                     AnswerId = answerId,
                     TimeToSolve = TimeSpan.FromSeconds(_currentSeconds)
                 });
+            }
+
+            if (OnTimeEnd != null)
+            {
+                await OnTimeEnd.Invoke(true);
             }
         }
 
@@ -89,12 +107,12 @@ namespace SQuiz.Shared.Services
                 
                 if (OnTimeEnd != null)
                 {
-                    await OnTimeEnd.Invoke();
+                    await OnTimeEnd.Invoke(false);
                 }
                 
                 if (OnAnswered != null)
                 {
-                    await OnAnswered.Invoke(new SendAnswerDto());
+                    await OnAnswered.Invoke(new SendAnswerDto(_gameQuestion.Id));
                 }
 
                 return;
@@ -111,7 +129,7 @@ namespace SQuiz.Shared.Services
 
         public event Action? OnStartPreparing;
         public event Action? OnPrepared;
-        public event Func<Task>? OnTimeEnd;
+        public event Func<bool, Task>? OnTimeEnd;
         public event Func<SendAnswerDto, Task>? OnAnswered;
         public event Action<ReceivedPointsDto>? OnReceivedPoints;
         public event Action<double>? OnTimeChanged;

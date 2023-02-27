@@ -1,0 +1,29 @@
+﻿@using SQuiz.Shared.Dtos.Game
+
+<MudListItem Value="ReceivedPoints" Dense="true">
+    <MudPaper Class="d-flex flex-row justify-space-between align-items-center px-2" Elevation="1">
+        <MudPaper Elevation="0" Class="my-auto">
+            <MudBadge Visible="ReceivedPoints?.Player?.IsOnline ?? false" Color="Color.Success" Dot>
+                <MudText Class=@(IsForCurrentUser ? "green-text " : "")>
+                    @ReceivedPoints?.Player?.Name
+                </MudText>
+            </MudBadge>
+        </MudPaper>
+        <MudBadge Visible="ReceivedPoints?.CurrentPoints > 0"
+                  Color="Color.Success"
+                  Overlap="true"
+                  Bordered="true"
+                  Class="mx-6 my-4"
+                  Content=@($"+{ReceivedPoints?.CurrentPoints}")>
+            <MudChip Color="Color.Warning">@ReceivedPoints?.TotalPoints</MudChip>
+        </MudBadge>
+    </MudPaper>
+</MudListItem>
+
+@code {
+    [Parameter]
+    public ReceivedPointsDto? ReceivedPoints { get; set; }
+
+    [Parameter]
+    public bool IsForCurrentUser { get; set; } = false;
+}

@@ -9,10 +9,17 @@ namespace SQuiz.Application.AutoMapper.Profiles
         public GameProfile()
         {
             CreateMap<GameOptionDto, QuizGame>()
+                .ReverseMap();
+
+            CreateMap<RegularGameOptionDto, RegularQuizGame>()
+                .IncludeBase<GameOptionDto, QuizGame>()
                 .ReverseMap()
-                .ForMember(x => x.Name, x => x.MapFrom(x => x.Quiz.Name))
                 .ForMember(x => x.EndDate, x => x.MapFrom(x => x.DateEnd))
                 .ForMember(x => x.StartDate, x => x.MapFrom(x => x.DateStart));
+
+            CreateMap<RealtimeGameOptionDto, RealtimeQuizGame>()
+                .IncludeBase<GameOptionDto, QuizGame>()
+                .ReverseMap();
 
             CreateMap<GameQuestionDto, Question>()
                .ReverseMap();
@@ -22,6 +29,10 @@ namespace SQuiz.Application.AutoMapper.Profiles
 
             CreateMap<PlayerDto, Player>()
                 .ReverseMap();
+
+            CreateMap<StartRegularGameDto, RegularQuizGame>();
+
+            CreateMap<StartRealtimeGameDto, RealtimeQuizGame>();
         }
     }
 }

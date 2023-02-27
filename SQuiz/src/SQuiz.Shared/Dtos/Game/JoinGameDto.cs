@@ -5,5 +5,7 @@
         public int ShortId { get; set; }
 
         public string Name { get; set; }
+
+        public string? OldConnectionId { get; set; }
     }
 }

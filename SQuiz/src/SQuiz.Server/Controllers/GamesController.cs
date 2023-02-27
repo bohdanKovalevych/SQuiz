@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SQuiz.Application.Games.ComputeAndSavePoints;
 using SQuiz.Application.Games.GetQuestion;
+using SQuiz.Application.Games.JoinGame;
 using SQuiz.Application.Games.ResetPoints;
 using SQuiz.Application.Games.SendAnswer;
 using SQuiz.Application.Interfaces;
@@ -39,7 +40,7 @@ namespace SQuiz.Server.Controllers
         [HttpGet]
         public async Task<IActionResult> GetPublicGames()
         {
-            var baseQuery = _context.QuizGames
+            var baseQuery = _context.RegularQuizGames
                 .AsNoTracking()
                 .Include(x => x.StartedBy)
                 .Where(x => x.Quiz.IsPublic)
@@ -47,12 +48,12 @@ namespace SQuiz.Server.Controllers
 
             var popularGames = await baseQuery
                 .OrderByDescending(x => x.Players.Count)
-                .ProjectTo<GameOptionDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<RegularGameOptionDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
             var newGames = await baseQuery
                 .OrderByDescending(x => x.DateCreated)
-                .ProjectTo<GameOptionDto>(_mapper.ConfigurationProvider)
+                .ProjectTo<RegularGameOptionDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
 
             var popularUsers = await baseQuery
@@ -75,20 +76,11 @@ namespace SQuiz.Server.Controllers
         [HttpGet("{shortId}")]
         public async Task<IActionResult> GetGame(int shortId)
         {
-            var result = await _context.QuizGames
-                .Select(x => new GameOptionDto()
-                {
-                    QuizId = x.QuizId,
-                    EndDate = x.DateEnd,
-                    Id = x.Id,
-                    QuestionCount = x.Quiz.Questions.Count,
-                    ShortId = x.ShortId,
-                    Name = x.Quiz.Name,
-                    StartDate = x.DateStart
-                })
+            var quizGame = await _context.QuizGames
                 .FirstOrDefaultAsync(x => x.ShortId == shortId);
-
-            return Ok(result);
+            var dto = _mapper.Map(quizGame, quizGame?.GetType(), typeof(GameOptionDto));
+            Response.Headers.Append(Constants.HeadersKey.ResponseEntityType, dto?.GetType().FullName);
+            return Ok(dto);
         }
 
         [HttpPost("answers")]
@@ -102,11 +94,11 @@ namespace SQuiz.Server.Controllers
             return result.MatchAction();
         }
 
-        [HttpGet("scores/{playerId}")]
-        public async Task<IActionResult> GetScores(string playerId)
+        [HttpGet("scores/{gameShortId:int}")]
+        public async Task<IActionResult> GetScores(int gameShortId)
         {
             var result = await _context.Players.AsNoTracking()
-                .Where(x => x.QuizGame.Players.Any(x => x.Id == playerId))
+                .Where(x => x.QuizGame.ShortId == gameShortId)
                 .OrderByDescending(x => x.Points)
                 .ProjectTo<PlayerDto>(_mapper.ConfigurationProvider)
                 .ToListAsync();
@@ -114,9 +106,9 @@ namespace SQuiz.Server.Controllers
             return Ok(result);
         }
 
-        [HttpGet("questions")]
+        [HttpGet("{gameShortId}/questions")]
         [Authorize(Policies.PlayerInGame)]
-        public async Task<IActionResult> GetQuestion()
+        public async Task<IActionResult> GetQuestion(int gameShortId)
         {
             string playerId = Request?.Cookies[Constants.CookiesKey.PlayerId] ?? throw new ArgumentException();
             string? lastQuestion = Request?.Cookies[Constants.CookiesKey.QuestionIndex];
@@ -130,7 +122,7 @@ namespace SQuiz.Server.Controllers
 
             var resetPoints = new ResetPointsCommand(playerId);
             var savePoints = new ComputeAndSavePointsCommand(playerId);
-            var getQuestionCommand = new GetQuestionCommand(playerId, index)
+            var getQuestionCommand = new GetQuestionCommand(gameShortId, index)
             {
                 OnEndQuiz = async () =>
                 {
@@ -164,7 +156,7 @@ namespace SQuiz.Server.Controllers
         [HttpPost("rejoin")]
         public async Task<IActionResult> RejoinGame([FromBody] string playerId)
         {
-            var game = await _context.QuizGames.AsNoTracking().FirstOrDefaultAsync(x => x.Players.Any(x => x.Id == playerId));
+            var game = await _context.RegularQuizGames.AsNoTracking().FirstOrDefaultAsync(x => x.Players.Any(x => x.Id == playerId));
             var playerExists = await _context.Players.AnyAsync(x => x.Id == playerId);
 
             if (game == null || !playerExists)
@@ -185,51 +177,29 @@ namespace SQuiz.Server.Controllers
         [HttpPost("join")]
         public async Task<IActionResult> JoinGame([FromBody] JoinGameDto gameDto)
         {
-            var gameId = gameDto.ShortId;
-            var name = gameDto.Name;
-            var game = await _context.QuizGames.AsNoTracking().FirstOrDefaultAsync(x => x.ShortId == gameId);
-
-            if (game == null)
+            var playerId = Guid.NewGuid().ToString();
+            var joinGameCommand = new JoinRegularGameCommand()
             {
-                return NotFound();
-            }
-
-            if (ValidateGame(game) is string validationMessage)
-            {
-                return BadRequest(validationMessage);
-            }
-
-            if (await _context.Players.AnyAsync(x => x.Name == name))
-            {
-                return BadRequest($"This name '{name}' is already in use");
-            }
-
-            var player = new Player()
-            {
-                Id = Guid.NewGuid().ToString(),
-                Name = name,
-                QuizGameId = game.Id
+                GameDto = gameDto,
+                GetPlayerId = () => playerId,
+                ValidateGame = ValidateGame
             };
-
-            _context.Players.Add(player);
-
-            await _context.SaveChangesAsync();
-            Response.Cookies.Append(Constants.CookiesKey.PlayerId, player.Id);
-
-            return Ok();
+            var result = await _mediator.Send(joinGameCommand);
+            result.IfSucc(x => Response.Cookies.Append(Constants.CookiesKey.PlayerId, playerId));
+            
+            return result.MatchAction();
         }
 
-        private string? ValidateGame(QuizGame game)
+        private string? ValidateGame(RegularQuizGame game)
         {
             if (game.DateEnd < DateTime.Now)
             {
                 return "It is too late";
             }
-
             if (game.DateStart > DateTime.Now)
             {
                 return $"It is too early. Wait for {game.DateStart - DateTime.Now}";
-            }
+            }   
 
             return null;
         }

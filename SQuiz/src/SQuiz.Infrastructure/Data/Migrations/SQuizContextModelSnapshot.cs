@@ -88,13 +88,16 @@ namespace SQuiz.Infrastructure.Data.Migrations
             modelBuilder.Entity("SQuiz.Shared.Models.Player", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("char(36)");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<DateTimeOffset?>("DateCreated")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset?>("DateUpdated")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsOnline")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -105,6 +108,12 @@ namespace SQuiz.Infrastructure.Data.Migrations
 
                     b.Property<string>("QuizGameId")
                         .IsRequired()
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("RealtimeQuizGameId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<string>("RegularQuizGameId")
                         .HasColumnType("char(36)");
 
                     b.Property<int>("ShortId")
@@ -118,6 +127,10 @@ namespace SQuiz.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("QuizGameId");
+
+                    b.HasIndex("RealtimeQuizGameId");
+
+                    b.HasIndex("RegularQuizGameId");
 
                     b.HasIndex("ShortId");
 
@@ -134,9 +147,15 @@ namespace SQuiz.Infrastructure.Data.Migrations
                     b.Property<string>("AnswerId")
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("CorrectAnswerId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
                     b.Property<string>("PlayerId")
                         .IsRequired()
-                        .HasColumnType("char(36)");
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int>("Points")
                         .HasColumnType("int");
@@ -144,6 +163,8 @@ namespace SQuiz.Infrastructure.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AnswerId");
+
+                    b.HasIndex("CorrectAnswerId");
 
                     b.HasIndex("PlayerId");
 
@@ -234,14 +255,16 @@ namespace SQuiz.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset?>("DateCreated")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<DateTimeOffset?>("DateEnd")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<DateTimeOffset?>("DateStart")
-                        .HasColumnType("datetimeoffset");
-
                     b.Property<DateTimeOffset?>("DateUpdated")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("QuizId")
                         .IsRequired()
@@ -265,6 +288,8 @@ namespace SQuiz.Infrastructure.Data.Migrations
                     b.HasIndex("StartedById");
 
                     b.ToTable("QuizGames");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("QuizGame");
                 });
 
             modelBuilder.Entity("SQuiz.Shared.Models.QuizModerator", b =>
@@ -302,6 +327,53 @@ namespace SQuiz.Infrastructure.Data.Migrations
                     b.ToTable("QuizModerators");
                 });
 
+            modelBuilder.Entity("SQuiz.Shared.Models.RealtimeQuizGame", b =>
+                {
+                    b.HasBaseType("SQuiz.Shared.Models.QuizGame");
+
+                    b.Property<int>("CurrentQuestionIndex")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsOpen")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ModeratorId")
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("RealtimeQuizGame_QuizId")
+                        .HasColumnType("char(36)");
+
+                    b.HasIndex("ModeratorId");
+
+                    b.HasIndex("RealtimeQuizGame_QuizId");
+
+                    b.HasDiscriminator().HasValue("RealtimeQuizGame");
+                });
+
+            modelBuilder.Entity("SQuiz.Shared.Models.RegularQuizGame", b =>
+                {
+                    b.HasBaseType("SQuiz.Shared.Models.QuizGame");
+
+                    b.Property<DateTimeOffset?>("DateEnd")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("DateStart")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ModeratorId")
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("RegularQuizGame_ModeratorId");
+
+                    b.Property<string>("RegularQuizGame_QuizId")
+                        .HasColumnType("char(36)");
+
+                    b.HasIndex("ModeratorId");
+
+                    b.HasIndex("RegularQuizGame_QuizId");
+
+                    b.HasDiscriminator().HasValue("RegularQuizGame");
+                });
+
             modelBuilder.Entity("SQuiz.Shared.Models.Answer", b =>
                 {
                     b.HasOne("SQuiz.Shared.Models.Question", "Question")
@@ -321,7 +393,19 @@ namespace SQuiz.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("SQuiz.Shared.Models.RealtimeQuizGame", "RealtimeQuizGame")
+                        .WithMany()
+                        .HasForeignKey("RealtimeQuizGameId");
+
+                    b.HasOne("SQuiz.Shared.Models.RegularQuizGame", "RegularQuizGame")
+                        .WithMany()
+                        .HasForeignKey("RegularQuizGameId");
+
                     b.Navigation("QuizGame");
+
+                    b.Navigation("RealtimeQuizGame");
+
+                    b.Navigation("RegularQuizGame");
                 });
 
             modelBuilder.Entity("SQuiz.Shared.Models.PlayerAnswer", b =>
@@ -330,6 +414,11 @@ namespace SQuiz.Infrastructure.Data.Migrations
                         .WithMany("PlayerAnswers")
                         .HasForeignKey("AnswerId");
 
+                    b.HasOne("SQuiz.Shared.Models.Answer", "CorrectAnswer")
+                        .WithMany("CorrectPlayerAnswers")
+                        .HasForeignKey("CorrectAnswerId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("SQuiz.Shared.Models.Player", "Player")
                         .WithMany("PlayerAnswers")
                         .HasForeignKey("PlayerId")
@@ -337,6 +426,8 @@ namespace SQuiz.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Answer");
+
+                    b.Navigation("CorrectAnswer");
 
                     b.Navigation("Player");
                 });
@@ -361,7 +452,7 @@ namespace SQuiz.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("SQuiz.Shared.Models.QuizGame", b =>
                 {
-                    b.HasOne("SQuiz.Shared.Models.Quiz", "Quiz")
+                    b.HasOne("SQuiz.Shared.Models.Quiz", null)
                         .WithMany("QuizGames")
                         .HasForeignKey("QuizId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -372,8 +463,6 @@ namespace SQuiz.Infrastructure.Data.Migrations
                         .HasForeignKey("StartedById")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Quiz");
 
                     b.Navigation("StartedBy");
                 });
@@ -397,8 +486,36 @@ namespace SQuiz.Infrastructure.Data.Migrations
                     b.Navigation("Quiz");
                 });
 
+            modelBuilder.Entity("SQuiz.Shared.Models.RealtimeQuizGame", b =>
+                {
+                    b.HasOne("SQuiz.Shared.Models.Moderator", null)
+                        .WithMany("RealtimeQuizGames")
+                        .HasForeignKey("ModeratorId");
+
+                    b.HasOne("SQuiz.Shared.Models.Quiz", "Quiz")
+                        .WithMany("RealtimeQuizGames")
+                        .HasForeignKey("RealtimeQuizGame_QuizId");
+
+                    b.Navigation("Quiz");
+                });
+
+            modelBuilder.Entity("SQuiz.Shared.Models.RegularQuizGame", b =>
+                {
+                    b.HasOne("SQuiz.Shared.Models.Moderator", null)
+                        .WithMany("RegularQuizGames")
+                        .HasForeignKey("ModeratorId");
+
+                    b.HasOne("SQuiz.Shared.Models.Quiz", "Quiz")
+                        .WithMany("RegularQuizGames")
+                        .HasForeignKey("RegularQuizGame_QuizId");
+
+                    b.Navigation("Quiz");
+                });
+
             modelBuilder.Entity("SQuiz.Shared.Models.Answer", b =>
                 {
+                    b.Navigation("CorrectPlayerAnswers");
+
                     b.Navigation("PlayerAnswers");
                 });
 
@@ -407,6 +524,10 @@ namespace SQuiz.Infrastructure.Data.Migrations
                     b.Navigation("QuizGames");
 
                     b.Navigation("QuizModerators");
+
+                    b.Navigation("RealtimeQuizGames");
+
+                    b.Navigation("RegularQuizGames");
                 });
 
             modelBuilder.Entity("SQuiz.Shared.Models.Player", b =>
@@ -426,6 +547,10 @@ namespace SQuiz.Infrastructure.Data.Migrations
                     b.Navigation("QuizGames");
 
                     b.Navigation("QuizModerators");
+
+                    b.Navigation("RealtimeQuizGames");
+
+                    b.Navigation("RegularQuizGames");
                 });
 
             modelBuilder.Entity("SQuiz.Shared.Models.QuizGame", b =>

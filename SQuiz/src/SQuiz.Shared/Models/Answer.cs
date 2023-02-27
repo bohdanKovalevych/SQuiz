@@ -15,5 +15,6 @@ namespace SQuiz.Shared.Models
         public Question Question { get; set; }
 
         public ICollection<PlayerAnswer> PlayerAnswers { get; set; } = new List<PlayerAnswer>();
+        public ICollection<PlayerAnswer> CorrectPlayerAnswers { get; set; } = new List<PlayerAnswer>();
     }
 }
