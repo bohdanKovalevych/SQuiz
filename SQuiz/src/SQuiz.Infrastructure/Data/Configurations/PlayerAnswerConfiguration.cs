@@ -16,6 +16,11 @@ namespace SQuiz.Infrastructure.Data.Configurations
                 .WithMany(x => x.PlayerAnswers)
                 .HasForeignKey(x => x.AnswerId);
 
+            builder.HasOne(x => x.CorrectAnswer)
+                .WithMany(x => x.CorrectPlayerAnswers)
+                .HasForeignKey(x => x.CorrectAnswerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             builder.Property(x => x.AnswerId)
                 .IsRequired(false);
 

@@ -6,5 +6,7 @@
         public string? SelectedAnswerId { get; set; }
         public int CurrentPoints { get; set; }
         public int TotalPoints { get; set; }
+        public int GameShortId { get; set; }
+        public PlayerDto? Player { get; set; }
     }
 }

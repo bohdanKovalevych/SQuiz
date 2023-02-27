@@ -21,8 +21,8 @@ namespace SQuiz.Server.Application.Security.Authorization.Requirements
             if (_httpContext.HttpContext?.Request.Cookies[Constants.CookiesKey.PlayerId] is string playerId
                 && await _quizContext.Players
                 .Where(x => x.Id == playerId)
-                .Where(x => DateTime.Now >= x.QuizGame.DateStart)
-                .Where(x => DateTime.Now <= x.QuizGame.DateEnd)
+                .Where(x => x.RegularQuizGame != null && DateTime.Now >= x.RegularQuizGame.DateStart)
+                .Where(x => x.RegularQuizGame != null && DateTime.Now <= x.RegularQuizGame.DateEnd)
                 .AnyAsync())
             {
                 context.Succeed(requirement);

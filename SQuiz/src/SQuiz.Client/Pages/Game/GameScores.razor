@@ -1,4 +1,4 @@
-﻿@page "/gameScores"
+﻿@page "/gameScores/{GameShortId:int}"
 @layout PlayerLayout
 
 @using SQuiz.Client.Interfaces
@@ -8,6 +8,7 @@
 
 @inject ICookieStoreService CookieStoreService
 @inject ISessionStorageService SessionStorage
+@inject ICurrentRealtimePlayerService CurrentRealtimePlayer
 @inject PublicClient Http
 @inject NavigationManager Nav
 
@@ -17,21 +18,25 @@
     Scores="@_scores"/>
 
 @code {
+    [Parameter]
+    public int? GameShortId { get; set; }
+    
     string? _playerId;
     List<PlayerDto>? _scores;
     string? _errorMessage;
 
     protected override async Task OnInitializedAsync()
     {
-        _playerId = (await CookieStoreService.GetAsync(Constants.CookiesKey.PlayerId))?.Value;
+        await CurrentRealtimePlayer.InitCurrentPlayerAsync();
+        _playerId = CurrentRealtimePlayer.CurrentPlayer?.Id;
         
-        if (_playerId == null)
+        if (GameShortId == null)
         {
             Nav.NavigateTo(Nav.BaseUri);
             return;
         }
 
-        var response = await Http.Client.GetAsync($"Games/scores/{_playerId}");
+        var response = await Http.Client.GetAsync($"Games/scores/{GameShortId}");
         
         if (!response.IsSuccessStatusCode)
         {

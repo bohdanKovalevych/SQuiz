@@ -24,10 +24,8 @@ namespace SQuiz.Infrastructure.Data.Configurations
             builder.HasOne(x => x.StartedBy)
                 .WithMany(x => x.QuizGames)
                 .HasForeignKey(x => x.StartedById);
-
-            builder.HasOne(x => x.Quiz)
-                .WithMany(x => x.QuizGames)
-                .HasForeignKey(x => x.QuizId);
+            
+            builder.Ignore(x => x.Quiz);
         }
     }
 }

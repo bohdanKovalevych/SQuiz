@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Mediator;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SQuiz.Application.Interfaces;
+using SQuiz.Application.ManageGames.EditQuizGame;
+using SQuiz.Server.Extensions;
 using SQuiz.Shared;
 using SQuiz.Shared.Dtos.Game;
 using SQuiz.Shared.Models;
@@ -15,10 +18,12 @@ namespace SQuiz.Server.Controllers
     public class ManageGamesController : ControllerBase
     {
         private readonly ISQuizContext _context;
+        private readonly IMediator _mediator;
 
-        public ManageGamesController(ISQuizContext context)
+        public ManageGamesController(ISQuizContext context, IMediator mediator)
         {
             _context = context;
+            _mediator = mediator;
         }
 
         [HttpGet]
@@ -26,16 +31,16 @@ namespace SQuiz.Server.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var result = await _context.QuizGames
+            var result = await _context.RegularQuizGames
                 .Where(x => x.StartedById == userId)
-                .Select(x => new GameOptionDto()
+                .Select(x => new RegularGameOptionDto()
                 {
                     QuizId = x.QuizId,
                     EndDate = x.DateEnd,
                     Id = x.Id,
                     QuestionCount = x.Quiz.Questions.Count,
                     ShortId = x.ShortId,
-                    Name = x.Quiz.Name,
+                    Name = x.Name,
                     StartDate = x.DateStart
                 })
                 .ToListAsync();
@@ -47,51 +52,32 @@ namespace SQuiz.Server.Controllers
         [Authorize(Policies.QuizModerator)]
         public async Task<IActionResult> EditQuizGame(
             [FromRoute] string resourceId,
-            [FromBody] StartGameDto model)
+            [FromBody] StartRegularGameDto model)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var game = new QuizGame()
+            var email = User.FindFirstValue("preferred_username");
+            var name = User.FindFirstValue("name");
+            model.QuizId = resourceId;
+            
+            var startRegularGameCommand = new EditRegularQuizGameCommand()
             {
-                Id = model.Id,
-                DateEnd = model.EndDate,
-                ShortId = model.ShortId,
-                DateStart = model.StartDate,
-                QuizId = resourceId
+                Model = model,
+                UserId = userId,
+                CreateModeratorIfNotExist = async () =>
+                {
+                    _context.Moderators.Add(new Moderator()
+                    {
+                        Id = userId,
+                        Email = User.FindFirstValue("preferred_username"),
+                        Name = User.FindFirstValue("name"),
+                    });
+                    await _context.SaveChangesAsync();
+                }
             };
 
-            if (model.Id != null && !await _context.QuizGames.AnyAsync(x => x.Id == model.Id))
-            {
-                return NotFound();
-            }
+            var result = await _mediator.Send(startRegularGameCommand);
 
-            game.DateUpdated = DateTime.Now;
-            game.StartedById = userId;
-
-            if (!await _context.Moderators.AnyAsync(x => x.Id == userId))
-            {
-                _context.Moderators.Add(new Moderator()
-                {
-                    Id = userId,
-                    Email = User.FindFirstValue("preferred_username"),
-                    Name = User.FindFirstValue("name"),
-                });
-
-                await _context.SaveChangesAsync();
-            }
-
-            if (game.Id == null)
-            {
-                game.Id = Guid.NewGuid().ToString();
-                _context.QuizGames.Add(game);
-            }
-            else
-            {
-                _context.QuizGames.Update(game);
-            }
-
-            await _context.SaveChangesAsync();
-
-            return Ok();
+            return result.MatchAction();
         }
     }
 }

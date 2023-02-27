@@ -20,7 +20,7 @@ namespace SQuiz.Application.UnitTests.Games.GetQuestion
         public async Task Handle_WhenCalled_InvokesOnStartQuiz()
         {
             // Arrange
-            var request = new GetQuestionCommand("player1", 0) { OnStartQuiz = Substitute.For<Func<Task>>() };
+            var request = new GetQuestionCommand(1, 0) { OnStartQuiz = Substitute.For<Func<Task>>() };
 
             // Act
             await _handler.Handle(request, CancellationToken.None);
@@ -40,8 +40,9 @@ namespace SQuiz.Application.UnitTests.Games.GetQuestion
                 {
                     QuizGames = new List<QuizGame>()
                     {
-                        new QuizGame()
+                        new RegularQuizGame()
                         {
+                            ShortId = 1,
                             Players = new List<Player>()
                             {
                                 new Player()
@@ -54,11 +55,11 @@ namespace SQuiz.Application.UnitTests.Games.GetQuestion
                 }
             };
 
-            var questions = new List<Question> { question };
+            var questions = new List<Question>() { question };
             var dbSetQuestions = DbSetMockFactory.GetDbSetAsyncMock(questions);
             _service.QuizContext.Questions.Returns(dbSetQuestions);
 
-            var request = new GetQuestionCommand("player1", 1) { OnIndexChanged = Substitute.For<Action<int>>() };
+            var request = new GetQuestionCommand(1, 1) { OnIndexChanged = Substitute.For<Action<int>>() };
 
             // Act
             await _handler.Handle(request, CancellationToken.None);
@@ -73,7 +74,7 @@ namespace SQuiz.Application.UnitTests.Games.GetQuestion
             // Arrange
             var dbSetQuestions = DbSetMockFactory.GetDbSetAsyncMock(Array.Empty<Question>());
             _service.QuizContext.Questions.Returns(dbSetQuestions);
-            var request = new GetQuestionCommand("player1", 1) { OnEndQuiz = Substitute.For<Func<Task>>() };
+            var request = new GetQuestionCommand(1, 1) { OnEndQuiz = Substitute.For<Func<Task>>() };
 
             // Act
             await _handler.Handle(request, CancellationToken.None);

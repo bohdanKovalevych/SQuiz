@@ -56,7 +56,7 @@ namespace SQuiz.Application.UnitTests.Helpers
                         }
                     });
             }
-
+            
             mockSet.AsQueryable<TEntity>().Provider.Returns(new TestAsyncQueryProvider<TEntity>(queryable.Provider));
             mockSet.AsQueryable<TEntity>().Expression.Returns(queryable.Expression);
             mockSet.AsQueryable<TEntity>().ElementType.Returns(queryable.ElementType);

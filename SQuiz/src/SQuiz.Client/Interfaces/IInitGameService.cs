@@ -9,5 +9,7 @@
         Task ChooseGameCode(int code);
         Task ChoosePlayerName(string name);
         Task JoinWithExistingId(string id);
+        Task CopyLink(int gameShortId);
+        string GetLink(int gameShortId);
     }
 }

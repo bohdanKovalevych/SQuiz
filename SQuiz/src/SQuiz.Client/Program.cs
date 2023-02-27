@@ -6,14 +6,23 @@ using MudBlazor.Services;
 using SQuiz.Client;
 using SQuiz.Client.Interfaces;
 using SQuiz.Client.Services;
+using SQuiz.Client.Services.JoinGameStrategies;
 using SQuiz.Shared;
+using SQuiz.Shared.Dtos.Game;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
-
+builder.Services.AddTransient<IJoinGameStrategy<RegularGameOptionDto>, JoinRegularGameStrategy>();
+builder.Services.AddTransient<IJoinGameStrategy<RealtimeGameOptionDto>, JoinRealtimeGameStrategy>();
+builder.Services.AddTransient<IJoinGameProcessor, JoinGameProcessor>();
 builder.Services.AddScoped<IInitGameService, InitGameService>();
 builder.Services.AddScoped<IThemeService, ThemeService>();
+builder.Services.AddScoped<ICurrentRealtimePlayerService, CurrentRealtimePlayerService>();
+builder.Services.AddScoped<IRealtimeQuizHubPushReceiver, RealtimeQuizHubPushReceiver>();
+builder.Services.AddScoped<IRealtimeQuizHubClient, RealtimeQuizHubClient>();
+builder.Services.AddScoped<IManageRealtimeQuizHubPushReceiver, ManageRealtimeQuizHubPushReceiver>();
+builder.Services.AddScoped<IManageRealtimeQuizHubClient, ManageRealtimeQuizHubClient>();
 builder.Services.AddScoped<CrudDialogService>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddHttpClient("SQuiz.ServerAPI", client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))

@@ -12,18 +12,26 @@
 @inject PublicClient Http
 @inject NavigationManager Nav
 @inject IPlayGameService PlayGameService
+@inject ISessionStorageService SessionStorage
 
-<PlayGameComponent GetQuestionDelegate="GetQuestion"/>
 
+<PlayGameComponent 
+    GetQuestionDelegate="GetQuestion"
+    AnsweredState="_answeredState"
+    DisableToAnswer="false"
+    HideNextButton="false"
+    HidePlayerState="false"/>
 
 @code {
+    bool _answeredState;
     public async Task<GameQuestionDto?> GetQuestion()
     {
-        var response = await Http.Client.GetAsync("Games/questions");
-
-        if (response.StatusCode == HttpStatusCode.NoContent)
+        var game = await SessionStorage.GetItemAsync<RegularGameOptionDto>(Constants.SessionStorageKey.Game);
+        var response = await Http.Client.GetAsync($"Games/{game?.ShortId}/questions");
+        
+        if (response.StatusCode == HttpStatusCode.NoContent && game != null)
         {
-            Nav.NavigateTo("/gameScores");
+            Nav.NavigateTo($"/gameScores/{game.ShortId}");
             return null;
         }
 

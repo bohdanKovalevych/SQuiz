@@ -1,26 +1,55 @@
-﻿using SQuiz.Client.Interfaces;
+﻿using Microsoft.AspNetCore.Components;
+using SQuiz.Client.Interfaces;
 
 namespace SQuiz.Client.Services
 {
     public class InitGameService : IInitGameService
     {
-        public event Func<int, Task> GameCodeChosen;
-        public event Func<string, Task> PlayerNameChosen;
-        public event Func<string, Task> JoinedWithExistingId;
+        private readonly IClipboardService _clipboardService;
+        private readonly NavigationManager _nav;
 
-        public Task ChooseGameCode(int code)
+        public InitGameService(IClipboardService clipboardService, NavigationManager nav)
         {
-            return GameCodeChosen.Invoke(code);
+            _clipboardService = clipboardService;
+            _nav = nav;
         }
 
-        public Task ChoosePlayerName(string name)
+        public event Func<int, Task>? GameCodeChosen;
+        public event Func<string, Task>? PlayerNameChosen;
+        public event Func<string, Task>? JoinedWithExistingId;
+
+        public async Task ChooseGameCode(int code)
         {
-            return PlayerNameChosen.Invoke(name);
+            if (GameCodeChosen != null)
+            {
+                await GameCodeChosen.Invoke(code);
+            }
         }
 
-        public Task JoinWithExistingId(string id)
+        public async Task ChoosePlayerName(string name)
         {
-            return JoinedWithExistingId.Invoke(id);
+            if (PlayerNameChosen != null)
+            {
+                await PlayerNameChosen.Invoke(name);
+            }
+        }
+
+        public async Task CopyLink(int gameShortId)
+        {
+            await _clipboardService.CopyToClipboard(GetLink(gameShortId));
+        }
+
+        public string GetLink(int gameShortId)
+        {
+            return $"{_nav.BaseUri}chooseGame?game={gameShortId}";
+        }
+
+        public async Task JoinWithExistingId(string id)
+        {
+            if (JoinedWithExistingId != null)
+            {
+                await JoinedWithExistingId.Invoke(id);
+            }
         }
     }
 }

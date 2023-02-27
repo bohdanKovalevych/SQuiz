@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using LanguageExt.Common;
-using LanguageExt.Pipes;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using SQuiz.Application.Interfaces;
@@ -11,13 +10,13 @@ namespace SQuiz.Application.Games.GetQuestion
 {
     public class GetQuestionCommand : IRequest<Result<GameQuestionDto?>>
     {
-        public GetQuestionCommand(string playerId, int lastQuestionIndex)
+        public GetQuestionCommand(int gameShortId, int lastQuestionIndex)
         {
-            PlayerId = playerId;
+            GameShortId = gameShortId;
             LastQuestionIndex = lastQuestionIndex;
         }
 
-        public string PlayerId { get; set; }
+        public int GameShortId { get; set; }
         public int LastQuestionIndex { get; set; }
         public Action<int>? OnIndexChanged { get; set; }
         public Func<Task>? OnEndQuiz { get; set; }
@@ -37,7 +36,7 @@ namespace SQuiz.Application.Games.GetQuestion
 
         public async ValueTask<Result<GameQuestionDto?>> Handle(GetQuestionCommand request, CancellationToken cancellationToken)
         {
-            string playerId = request.PlayerId;
+            int gameShortId = request.GameShortId;
             int index = request.LastQuestionIndex;
 
             if (index == 0 && request.OnStartQuiz != null)
@@ -47,9 +46,9 @@ namespace SQuiz.Application.Games.GetQuestion
 
             var question = await _context.Questions
                 .Include(x => x.Answers)
-                .FirstOrDefaultAsync(x => x.Quiz
-                    .QuizGames.Any(x => x.Players.Any(x => x.Id == playerId))
-                        && x.Order == index, cancellationToken);
+                .FirstOrDefaultAsync(x =>
+                    x.Quiz.QuizGames.Any(x => x.ShortId == gameShortId)
+                    && x.Order == index, cancellationToken);
 
             if (await TryEndQuiz(question, request))
             {
@@ -58,7 +57,7 @@ namespace SQuiz.Application.Games.GetQuestion
 
             request.OnIndexChanged?.Invoke(index + 1);
             question.Answers = question.Answers.OrderBy(x => x.Order).ToList();
-            
+
             var questionDto = _mapper.Map<GameQuestionDto>(question);
             return questionDto;
         }
@@ -66,7 +65,7 @@ namespace SQuiz.Application.Games.GetQuestion
         private async Task<bool> TryEndQuiz(Question? question, GetQuestionCommand request)
         {
             bool isEndQUiz = false;
-            
+
             if (question == null)
             {
                 isEndQUiz = true;

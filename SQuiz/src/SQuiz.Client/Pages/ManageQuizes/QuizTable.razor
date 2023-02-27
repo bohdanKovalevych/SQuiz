@@ -1,10 +1,12 @@
 ﻿@using SQuiz.Client.Services
 @using SQuiz.Client.Shared.Components.Dialogs
+@using SQuiz.Shared.Dtos.Game
 @using SQuiz.Shared.Dtos.Quiz
 @using SQuiz.Shared.Extensions
 
 @inject HttpClient Http
 @inject CrudDialogService Dialog
+@inject NavigationManager Nav
 
 <MudText Typo="Typo.h3">
     Quiz table
@@ -24,8 +26,9 @@
         <RowTemplate>
             <MudTd>
                 <MudButtonGroup Size="Size.Small">
-                    <MudIconButton Icon="@Icons.Material.Filled.Info" Href="@($"manage-quiz/{context.Id}")"></MudIconButton>
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" @onclick=@(() => OpenModalToRemove(@context))></MudIconButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.PlayCircleFilled" @onclick="() => AskToRunRealtimeQuizGame(context.Id)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Info" Href="@($"manage-quiz/{context.Id}")"/>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" @onclick=@(() => OpenModalToRemove(@context))/>
                 </MudButtonGroup>
             </MudTd>
             <MudTd DataLabel="Id">@context.ShortId</MudTd>
@@ -44,7 +47,7 @@
         
 @code {
     public List<QuizOptionDto>? Items { get; set; }
-    
+
     protected override async Task OnInitializedAsync()
     {
         Items = await Http.GetFromJsonAsync<List<QuizOptionDto>>("Quizzes");
@@ -68,5 +71,25 @@
         {
             Items?.Remove(quiz);
         }
+    }
+
+    public async Task AskToRunRealtimeQuizGame(string quizId)
+    {
+        await Dialog.AskToAddItem<string, AddRealtimeQuizGameDialog>(name => RunRealtimeQuizGame(name, quizId));
+        
+    }
+
+    public async Task RunRealtimeQuizGame(string quizName, string quizId)
+    {
+        var model = new StartRealtimeGameDto()
+        {
+            QuizId = quizId,
+            IsOpen = true, 
+            Name = quizName
+        };
+        var responseGameId = await Http.PutAsJsonAsync($"ManageRealtimeGames/{quizId}", model);
+        var shortId = await responseGameId.Content.ReadFromJsonAsync<int>();
+
+        Nav.NavigateTo($"run-quiz/{shortId}");
     }
 }

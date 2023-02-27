@@ -7,6 +7,7 @@ namespace SQuiz.Shared.Interfaces
         double CurrentMaxTime { get; }
         void InitQuestion(GameQuestionDto questionDto);
         void StartTimer();
+        void StopTimer();
         void DelayToPrepareForQuestion();
         void ReceivePoints(ReceivedPointsDto points);
         void EndQuiz();
@@ -15,7 +16,7 @@ namespace SQuiz.Shared.Interfaces
         event Action<ReceivedPointsDto>? OnReceivedPoints;
         event Action? OnStartPreparing;
         event Action? OnPrepared;
-        event Func<Task>? OnTimeEnd;
+        event Func<bool, Task>? OnTimeEnd;
         event Func<Task>? OnQuizEnded;
         event Func<SendAnswerDto, Task>? OnAnswered;
         event Action<double>? OnTimeChanged;

@@ -16,18 +16,18 @@
 </LoadingWrapper>
 
 @code {
-    public GameOptionDto? Game; 
+    public RegularGameOptionDto? Game; 
 
     protected override async Task OnInitializedAsync()
     {
         var playerId = (await CookieStoreService.GetAsync(Constants.CookiesKey.PlayerId))?.Value;
-
+        
         if (playerId == null)
         {
             Nav.NavigateTo(Nav.BaseUri);
         }
 
-        Game = await SessionStorage.GetItemAsync<GameOptionDto>(Constants.SessionStorageKey.Game);
+        Game = await SessionStorage.GetItemAsync<RegularGameOptionDto>(Constants.SessionStorageKey.Game);
     }
 
     public async Task Start()

@@ -12,9 +12,13 @@ namespace SQuiz.Application.Interfaces
         DbSet<Moderator> Moderators { get; set; }
         DbSet<QuizModerator> QuizModerators { get; set; }
         DbSet<QuizGame> QuizGames { get; set; }
+        DbSet<RegularQuizGame> RegularQuizGames { get; set; }
+        DbSet<RealtimeQuizGame> RealtimeQuizGames { get; set; }
         DbSet<Player> Players { get; set; }
         DbSet<PlayerAnswer> PlayerAnswers { get; set; }
 
+        DbSet<TEntity> Set<TEntity>()
+            where TEntity : class;
         void SetState<TEntity>(TEntity entity, EntityState state)
             where TEntity : class;
         EntityEntry<TEntity> Add<TEntity>(TEntity entity)

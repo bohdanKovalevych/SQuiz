@@ -23,9 +23,9 @@ namespace SQuiz.Server.Extensions
                     {
                         return new NotFoundResult();
                     }
-                    else if (ex is BadRequestException)
+                    else if (ex is BadRequestException e && e.Message is string validationMessage)
                     {
-                        return new BadRequestResult();
+                        return new BadRequestObjectResult(validationMessage);
                     }
 
                     return new BadRequestResult();

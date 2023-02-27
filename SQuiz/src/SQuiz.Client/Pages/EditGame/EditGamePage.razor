@@ -7,7 +7,8 @@
 
 @inject HttpClient Http
 @inject NavigationManager Nav
-@inject IClipboardService ClipboardService
+@inject IInitGameService InitGameServcie
+
 @attribute [Authorize]
 
 
@@ -70,14 +71,14 @@
 
     public List<QuizOptionDto>? QuizOptions;
 
-    public List<GameOptionDto>? GameOptions;
+    public List<RegularGameOptionDto>? GameOptions;
 
-    public GameOptionDto? GameOption;
+    public RegularGameOptionDto? GameOption;
 
     protected override async Task OnInitializedAsync()
     {
         var getQuizzes = Http.GetFromJsonAsync<List<QuizOptionDto>>("Quizzes");
-        var getGames = Http.GetFromJsonAsync<List<GameOptionDto>>("ManageGames");
+        var getGames = Http.GetFromJsonAsync<List<RegularGameOptionDto>>("ManageGames");
 
         QuizOptions = await getQuizzes;
         GameOptions = await getGames;
@@ -100,7 +101,7 @@
         GameOption = null;
     }
 
-    public void EditGame(GameOptionDto game)
+    public void EditGame(RegularGameOptionDto game)
     {
         ShowEdit = true;
         GameOption = game;
@@ -108,6 +109,6 @@
 
     public async Task CopyLinkToGame(int shortId)
     {
-        await ClipboardService.CopyToClipboard($"{Nav.BaseUri}joingame/{shortId}");
+        await InitGameServcie.CopyLink(shortId);
     }
 }

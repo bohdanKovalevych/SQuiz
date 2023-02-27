@@ -1,0 +1,109 @@
+﻿@page "/playRealtime/{showGame}"
+@layout PlayerLayout
+@using SQuiz.Client.Pages.Game.GameCoreComponents
+@using SQuiz.Client.Services
+@using SQuiz.Shared.Dtos.Game
+@using SQuiz.Client.Interfaces
+@using SQuiz.Shared.Interfaces
+
+@implements IAsyncDisposable
+
+@inject ISnackbar Snackbar
+@inject PublicClient Http 
+@inject ICookieStoreService CookieStoreService
+@inject ISessionStorageService SessionStorage
+@inject NavigationManager Nav
+@inject IRealtimeQuizHubClient Hub
+@inject IPlayRealtimeGameService PlayGameService
+@inject ICurrentRealtimePlayerService CurrentPlayerService
+@inject IJoinGameProcessor JoinGameProcessor
+
+@if (ShowGame == "showGame")
+{
+    <ShowRealtimeGameComponent 
+        Game="_game"
+        Player="_player"
+        Players="_players" />
+}
+else 
+{
+    <PlayRealtimeGame/>
+}
+
+
+@code {
+    RealtimeGameOptionDto? _game;
+    PlayerDto? _player;
+    List<PlayerDto>? _players;
+    bool _keepConnectionOpened;
+
+    [Parameter]
+    public string? ShowGame { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Hub.StartAsync();
+
+        if (CurrentPlayerService.CurrentPlayer is PlayerDto player && CurrentPlayerService.CurrentGame is RealtimeGameOptionDto game)
+        {
+            _game = game;
+            _player = player;
+            _players = await Http.Client.GetFromJsonAsync<List<PlayerDto>>($"Games/scores/{CurrentPlayerService.CurrentGame.ShortId}");
+            SubscribeHandlers();
+        }
+        else 
+        {
+            Nav.NavigateTo(Nav.BaseUri);
+        }
+    }
+
+
+
+    void SubscribeHandlers()
+    {
+        PlayGameService.OnPlayerJoined += OnPlayerJoined;
+        PlayGameService.OnPlayerLeft += OnPlayerLeft;
+        PlayGameService.OnStartQuiz += OnStartQuiz;
+    }
+
+    void UnsubscribeHandlers()
+    {
+        PlayGameService.OnPlayerJoined -= OnPlayerJoined;
+        PlayGameService.OnPlayerLeft -= OnPlayerLeft;
+        PlayGameService.OnStartQuiz -= OnStartQuiz;
+    }
+
+    Task OnPlayerJoined(PlayerDto player)
+    {
+        Snackbar.Add($"Player {player.Name} joined");
+        _players?.Add(player);
+        StateHasChanged();
+
+        return Task.CompletedTask;
+    }
+
+    Task OnPlayerLeft(PlayerDto player)
+    {
+        _players?.RemoveAll(x => x.Name == player.Name);
+        Snackbar.Add($"Player {player.Name} left");
+        StateHasChanged();
+
+        return Task.CompletedTask;
+    }
+
+    void OnStartQuiz()
+    {
+        _keepConnectionOpened = true;
+        Nav.NavigateTo("playRealtime/play");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        UnsubscribeHandlers();
+
+        if (!_keepConnectionOpened)
+        {
+            await Hub.StopAsync();
+        }
+    }
+}

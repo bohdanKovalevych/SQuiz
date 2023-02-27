@@ -13,11 +13,11 @@
     [Parameter]
     public string? BackUrl { get; set; }
 
-    GameOptionDto _game;
+    RegularGameOptionDto _game;
 
     protected override async Task OnInitializedAsync()
     {
-        _game = await Storage.GetItemAsync<GameOptionDto>(Constants.SessionStorageKey.PreviewGame);
+        _game = await Storage.GetItemAsync<RegularGameOptionDto>(Constants.SessionStorageKey.PreviewGame);
 
         if (_game == null)
         {

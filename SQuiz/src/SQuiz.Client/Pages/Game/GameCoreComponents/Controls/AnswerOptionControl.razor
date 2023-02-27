@@ -1,5 +1,19 @@
 ﻿@using SQuiz.Shared.Dtos.Game
 
+<style>
+    .mud-button-root:disabled {
+        color: white !important;
+    }
+
+    .mud-button-root:hover {
+        color: var(--mud-palette-success) !important;
+    }
+
+    .rounded {
+        border-radius: 10px !important;
+    }
+</style>
+
 <MudItem xs="12" sm="6" md="4" lg="3">
     <MudPaper Elevation="0" Class="mud-height-full d-flex flex-column justify-end">
         @if (IsCorrect)
@@ -10,14 +24,16 @@
         {
             <MudAlert Severity="Severity.Error">Your choice</MudAlert>
         }
-        <MudButton @onclick=@(() => SendAnswer(Answer))
-                   Disabled=@(AnsweredState)
-                   Variant="Variant.Text"
-                   Color="Color.Success"
-                   Size="Size.Large"
-                   Class=@($"rounded pa-10 {_variantColors[Answer.Order % _variantColors.Count]} white-text mud-width-full mud-height-full")>
-            @($"{v}. {Answer.AnswerText}")
-        </MudButton>
+        <MudBadge Visible="AnsweredState" Content=@(OtherReceivedPoints?.Where(x => x.SelectedAnswerId == Answer.Id)?.Count()) Color="Color.Primary">
+            <MudButton @onclick=@(() => SendAnswer(Answer))
+                       Disabled="Disabled"
+                       Variant="Variant.Text"
+                       Color="Color.Success"
+                       Size="Size.Large"
+                       Class=@($"rounded pa-10 {_variantColors[Answer.Order % _variantColors.Count]} white-text mud-width-full mud-height-full")>
+                @($"{v}. {Answer.AnswerText}")
+            </MudButton>
+        </MudBadge>
     </MudPaper>
 </MudItem>
 
@@ -54,10 +70,16 @@
 
     [Parameter]
     public bool AnsweredState { get; set; }
+    
+    [Parameter]
+    public bool Disabled { get; set; }
 
     [Parameter]
     public GameAnswerDto Answer { get; set; }
 
     [Parameter]
-    public ReceivedPointsDto? ReceivedPoints { get; set; } 
+    public ReceivedPointsDto? ReceivedPoints { get; set; }
+
+    [Parameter]
+    public List<ReceivedPointsDto>? OtherReceivedPoints { get; set; }
 }
