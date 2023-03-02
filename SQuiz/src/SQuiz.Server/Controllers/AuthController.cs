@@ -16,11 +16,13 @@ namespace SQuiz.Server.Controllers
     {
         private readonly UserManager<SQuizUser> _userManager;
         private readonly ISQuizContext _quizContext;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(UserManager<SQuizUser> userManager, ISQuizContext quizContext)
+        public AuthController(UserManager<SQuizUser> userManager, ISQuizContext quizContext, ILogger<AuthController> logger)
         {
             _userManager = userManager;
             _quizContext = quizContext;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -40,9 +42,14 @@ namespace SQuiz.Server.Controllers
                 };
 
                 var userResult = await _userManager.CreateAsync(user);
+
                 if (!userResult.Succeeded)
                 {
-                    // TODO: log error
+                    foreach (var err in userResult.Errors)
+                    {
+                        _logger.LogError(err.Code, err.Description);
+                    }
+
                     return Ok();
                 }
             }
@@ -51,7 +58,7 @@ namespace SQuiz.Server.Controllers
             {
                 var moderator = new Moderator()
                 {
-                    Id = Guid.NewGuid().ToString(),
+                    Id = id,
                     Email = user.Email,
                     Name = user.UserName
                 };
@@ -60,7 +67,7 @@ namespace SQuiz.Server.Controllers
 
                 if (numSaved == 0)
                 {
-                    // TODO: log error
+                    _logger.LogError("Moderator was not saved");
                 }
             }
 

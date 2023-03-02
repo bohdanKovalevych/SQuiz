@@ -10,7 +10,7 @@ namespace SQuiz.Infrastructure.Data.Configurations
         {
             builder.Property(x => x.Id)
                 .ValueGeneratedNever()
-                .HasColumnType("nvarchar(200)");
+                .HasColumnType("char(36)");
 
             builder.Property(x => x.ShortId)
               .HasDefaultValueSql($"NEXT VALUE FOR {builder.Metadata.GetTableName()}_shortId_seq");
