@@ -67,4 +67,9 @@ app.MapHub<RealtimeQuizHub>("quizHub");
 app.MapHub<ManageRealtimeQuizHub>("manageQuizHub");
 app.MapFallbackToFile("index.html");
 
+var logger = app.Services.GetRequiredService<ILoggerFactory>()
+    .CreateLogger<Program>();
+
+logger.LogInformation("Server was built successfully");
+
 app.Run();

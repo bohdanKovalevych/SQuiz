@@ -1,7 +1,5 @@
 ﻿using AutoMapper;
 using LanguageExt;
-using LanguageExt.ClassInstances;
-using LanguageExt.Common;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -9,14 +7,11 @@ using Microsoft.EntityFrameworkCore;
 using SQuiz.Application.Games.GetQuestion;
 using SQuiz.Application.Games.SetEmptyAnswersForPlayers;
 using SQuiz.Application.Interfaces;
-using SQuiz.Application.ManageGames.EditQuizGame;
 using SQuiz.Shared.Dtos.Game;
-using SQuiz.Shared.Exceptions;
 using SQuiz.Shared.Hubs.ManageRealtimeQuizHub;
 using SQuiz.Shared.Hubs.RealtimeQuizHub;
 using SQuiz.Shared.Models;
 using System.Security.Claims;
-using static SQuiz.Shared.Models.Question;
 
 namespace SQuiz.Server.Hubs
 {
@@ -27,17 +22,20 @@ namespace SQuiz.Server.Hubs
         private readonly IMediator _mediator;
         private readonly ISQuizContext _quizContext;
         private readonly IHubContext<RealtimeQuizHub, IRealtimeQuizHubPush> _quizHub;
+        private readonly ILogger<ManageRealtimeQuizHub> _logger;
 
         public ManageRealtimeQuizHub(
             IMapper mapper,
-            IMediator mediator, 
-            ISQuizContext quizContext, 
-            IHubContext<RealtimeQuizHub, IRealtimeQuizHubPush> quizHub)
+            IMediator mediator,
+            ISQuizContext quizContext,
+            IHubContext<RealtimeQuizHub, IRealtimeQuizHubPush> quizHub,
+            ILogger<ManageRealtimeQuizHub> logger)
         {
             _mapper = mapper;
             _mediator = mediator;
             _quizContext = quizContext;
             _quizHub = quizHub;
+            _logger = logger;
         }
 
         public async Task NextQuestion(int shortId)
@@ -47,7 +45,7 @@ namespace SQuiz.Server.Hubs
                 .Include(x => x.Players)
                     .ThenInclude(x => x.PlayerAnswers)
                 .FirstAsync(x => x.ShortId == shortId)
-                .Bind(async(x) => 
+                .Bind(async (x) =>
                 {
                     var command = new GetQuestionCommand(x.ShortId, x.CurrentQuestionIndex)
                     {
@@ -61,7 +59,7 @@ namespace SQuiz.Server.Hubs
                             x.CurrentQuestionIndex = index;
                             _quizContext.SaveChangesAsync().Wait();
                         },
-                        OnStartQuiz = async () => 
+                        OnStartQuiz = async () =>
                         {
                             ResetPoints(x);
                             await _quizContext.SaveChangesAsync();
@@ -69,13 +67,13 @@ namespace SQuiz.Server.Hubs
                         }
                     };
                     var result = await _mediator.Send(command);
-                   
+
                     return result;
                     ;
                 });
 
             await game.Match(
-                x => _quizHub.Clients.Group(shortId.ToString()).OnGetQuestion(x), 
+                x => _quizHub.Clients.Group(shortId.ToString()).OnGetQuestion(x),
                 ErrorHandler);
         }
 
@@ -90,6 +88,7 @@ namespace SQuiz.Server.Hubs
 
         private Task ErrorHandler(Exception e)
         {
+            _logger.LogError(e, e.Message);
             return Clients.Caller.OnError(e.Message);
         }
 
@@ -98,16 +97,24 @@ namespace SQuiz.Server.Hubs
             var setEmptyCommand = new SetEmptyAnswersForPlayersCommand()
             {
                 GameShortId = shortId,
-                ProcessAnswer = async command =>  (await _mediator.Send(command)).Match(x=> x, e => null)
+                ProcessAnswer = async command => (await _mediator.Send(command)).Match(x => x, e => 
+                {
+                    _logger.LogError(e, "on proccess answer");
+                    return null;
+                })
             };
 
             var result = await _mediator.Send(setEmptyCommand);
 
-            result.IfSucc(async x =>
+            await result.Match(async x =>
             {
                 var (points, correctAnswer) = x;
                 await _quizHub.Clients.Group(shortId.ToString())
                     .OnAllPlayersAnswered(points, correctAnswer);
+            }, e => 
+            {
+                _logger.LogError(e, "on proccess answer");
+                return Task.CompletedTask;
             });
         }
     }

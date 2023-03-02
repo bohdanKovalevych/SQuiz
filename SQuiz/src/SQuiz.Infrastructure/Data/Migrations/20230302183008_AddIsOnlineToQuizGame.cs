@@ -4,7 +4,7 @@
 
 namespace SQuiz.Infrastructure.Data.Migrations
 {
-    public partial class AddIsonlineFieldToPlayer : Migration
+    public partial class AddIsOnlineToQuizGame : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

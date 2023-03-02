@@ -38,7 +38,6 @@ namespace SQuiz.Application.Quizzes.CreateQuiz
             string userid = request.UserId;
             var quiz = _mapper.Map<Quiz>(request.Model);
 
-            quiz.Id = Guid.NewGuid().ToString();
             quiz.AuthorId = userid;
 
             _quizService.AssignIdsToQuestionsAndAnswers(quiz,

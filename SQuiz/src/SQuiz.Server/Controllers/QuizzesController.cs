@@ -1,6 +1,4 @@
 ﻿using LanguageExt;
-using LanguageExt.Common;
-using LanguageExt.SomeHelp;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -99,11 +97,12 @@ namespace SQuiz.Server.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateQuiz(EditQuizDto quizDto)
         {
+            quizDto.Id = Guid.NewGuid().ToString();
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            
+
             var createQuizCommand = new CreateQuizCommand(quizDto, userId);
             var updateModeratorsCommand = new EditModeratorsCommand(quizDto);
-            
+
             var updateResult = await _mediator.Send(createQuizCommand)
                .Bind(async _ => await _mediator.Send(updateModeratorsCommand));
 

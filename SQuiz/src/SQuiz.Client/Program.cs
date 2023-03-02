@@ -41,4 +41,10 @@ builder.Services.AddMsalAuthentication(options =>
 builder.Services.AddMudServices();
 builder.Services.AddShared();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+var logger = host.Services.GetRequiredService<ILoggerFactory>()
+    .CreateLogger<Program>();
+
+logger.LogInformation("Server was built successfully");
+
+await host.RunAsync();

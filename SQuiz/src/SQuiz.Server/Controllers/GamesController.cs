@@ -27,14 +27,17 @@ namespace SQuiz.Server.Controllers
         private readonly ISQuizContext _context;
         private readonly IMapper _mapper;
         private readonly IMediator _mediator;
+        private readonly ILogger<GamesController> _logger;
 
         public GamesController(ISQuizContext context,
             IMapper mapper,
-            IMediator mediator)
+            IMediator mediator,
+            ILogger<GamesController> logger)
         {
             _context = context;
             _mapper = mapper;
             _mediator = mediator;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -117,6 +120,7 @@ namespace SQuiz.Server.Controllers
 
             if (!parsed)
             {
+                _logger.LogError("LastQuestion index was not parsed. Current value is: {LastQuestion}", lastQuestion);
                 return BadRequest();
             }
 
@@ -161,11 +165,13 @@ namespace SQuiz.Server.Controllers
 
             if (game == null || !playerExists)
             {
+                _logger.LogError("game or player was not found with id {id}", playerId);
                 return NotFound();
             }
 
             if (ValidateGame(game) is string validationMessage)
             {
+                _logger.LogError("Validation failed with id {id}", playerId);
                 return BadRequest(validationMessage);
             }
 

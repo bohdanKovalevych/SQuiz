@@ -50,6 +50,7 @@ namespace SQuiz.Application.Games.SetEmptyAnswersForPlayers
             }
 
             var result = new List<ReceivedPointsDto>();
+     
             foreach (var player in game.Players)
             {
                 var points = player.PlayerAnswers
