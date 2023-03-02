@@ -1,4 +1,5 @@
 ﻿using LanguageExt.Common;
+using Mediator;
 using Microsoft.AspNetCore.Mvc;
 using SQuiz.Shared.Exceptions;
 
@@ -11,7 +12,7 @@ namespace SQuiz.Server.Extensions
             return result.Match<IActionResult>(
                 x => 
                 {
-                    if (x == null)
+                    if (x == null || x is Unit)
                     {
                         return new NoContentResult();
                     }
