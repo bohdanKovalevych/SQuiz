@@ -5,27 +5,22 @@ namespace SQuiz.Shared.Services
 {
     public class PlayRealtimeGameService : PlayGameService, IPlayRealtimeGameService
     {
-        public PlayRealtimeGameService()
-        {
-
-        }
-
-        public void InvokeAllPlayersAnswered(List<ReceivedPointsDto> playerPoints, string correctAnswerId)
+        public void InvokeOnAllPlayersAnswered(List<ReceivedPointsDto> playerPoints, string correctAnswerId)
         {
             OnAllPlayersAnswered?.Invoke(playerPoints, correctAnswerId);
         }
 
-        public void InvokeError(string? message)
+        public void InvokeOnError(string? message)
         {
             OnError?.Invoke(message);
         }
 
-        public void InvokeGetQuestion(GameQuestionDto question)
+        public void InvokeOnGetQuestion(GameQuestionDto question)
         {
             OnGetQuestion?.Invoke(question);
         }
 
-        public async void InvokePlayerJoined(PlayerDto player)
+        public async void InvokeOnPlayerJoined(PlayerDto player)
         {
             if (OnPlayerJoined != null)
             {
@@ -33,7 +28,7 @@ namespace SQuiz.Shared.Services
             }
         }
 
-        public async void InvokePlayerLeft(PlayerDto player)
+        public async void InvokeOnPlayerLeft(PlayerDto player)
         {
             if (OnPlayerLeft != null)
             {
@@ -41,12 +36,12 @@ namespace SQuiz.Shared.Services
             }
         }
 
-        public void InvokeStartQuiz()
+        public void InvokeOnStartQuiz()
         {
             OnStartQuiz?.Invoke();
         }
 
-        public void InvokeOtherReceivedPoints(ReceivedPointsDto receivedPoints)
+        public void InvokeOnOtherReceivedPoints(ReceivedPointsDto receivedPoints)
         {
             OnOtherReceivedPoints?.Invoke(receivedPoints);
         }

@@ -4,13 +4,13 @@ namespace SQuiz.Shared.Interfaces
 {
     public interface IPlayRealtimeGameService : IPlayGameService
     {
-        void InvokeAllPlayersAnswered(List<ReceivedPointsDto> playerPoints, string correctAnswerId);
-        void InvokeError(string? message);
-        void InvokeGetQuestion(GameQuestionDto question);
-        void InvokePlayerJoined(PlayerDto player);
-        void InvokePlayerLeft(PlayerDto player);
-        void InvokeStartQuiz();
-        void InvokeOtherReceivedPoints(ReceivedPointsDto receivedPoints);
+        void InvokeOnAllPlayersAnswered(List<ReceivedPointsDto> playerPoints, string correctAnswerId);
+        void InvokeOnError(string? message);
+        void InvokeOnGetQuestion(GameQuestionDto question);
+        void InvokeOnPlayerJoined(PlayerDto player);
+        void InvokeOnPlayerLeft(PlayerDto player);
+        void InvokeOnStartQuiz();
+        void InvokeOnOtherReceivedPoints(ReceivedPointsDto receivedPoints);
 
         public event Action<ReceivedPointsDto>? OnOtherReceivedPoints;
         public event Action<List<ReceivedPointsDto>, string>? OnAllPlayersAnswered;

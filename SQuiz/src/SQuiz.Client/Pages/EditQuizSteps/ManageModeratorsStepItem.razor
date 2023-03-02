@@ -10,7 +10,7 @@
             <MudList>
                 <MudListSubheader>
                     <MudMenu Label="Moderators" EndIcon="@Icons.Material.Filled.MoreVert">
-                        <MudMenuItem @onclick="AskToAddModerator" Icon="@Icons.Material.Filled.Add">
+                        <MudMenuItem @onclick="AskToAddModerator" OnTouch="AskToAddModerator" Icon="@Icons.Material.Filled.Add">
                             Add Moderator
                         </MudMenuItem>
                     </MudMenu>
@@ -22,7 +22,7 @@
                         <MudPaper Class="d-flex flex-row justify-space-between">
                             <MudText Class="pa-1">@moderator.Name</MudText>
                             <MudMenu Context="question" EndIcon="@Icons.Material.Filled.MoreVert">
-                                <MudMenuItem Icon="@Icons.Material.Filled.Delete" @onclick=@(() => RemoveModerator(moderator))>Remove</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Delete" @onclick=@(() => RemoveModerator(moderator)) OnTouch=@(() => RemoveModerator(moderator))>Remove</MudMenuItem>
                             </MudMenu>
                         </MudPaper>
                     </MudListItem>

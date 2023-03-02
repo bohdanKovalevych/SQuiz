@@ -4,6 +4,7 @@
 @using SQuiz.Client.Pages.Game.GameCoreComponents
 @using SQuiz.Client.Pages.Game.GameCoreComponents.Controls
 @using SQuiz.Client.Services
+@using SQuiz.Client.Services.GameStateMachines;
 @using SQuiz.Shared.Dtos.Game
 @using SQuiz.Shared.Extensions
 @using System.Net
@@ -19,20 +20,22 @@
 @inject ISnackbar SnackbarService
 @inject IInitGameService InitGameServcie
 @inject ISessionStorageService SessionStorage
+@inject IRealtimeGameStateMachine StateMachine
 
 <LoadingWrapper WaitFor="_game">
-    @if(!_gameStarted)
+    @if(StateMachine.State == RealtimeGameStateMachine.STATE.PreviewingQuiz)
     {
         <ModeratorShowRealtimeGameComponent 
             Game="_game" 
             OnStart="StartQuiz"
-            Players="_players"/>
+            Players="StateMachine.Players"/>
     }
     else 
     {
         <MudTabs KeepPanelsAlive>
             <MudAlert>@_playersAnswered players answered</MudAlert>
             <MudTabPanel Text="Quiz">
+                <MudFab OnClick="StopQuiz" Color="Color.Error" Label="Stop quiz"/>
                 <PlayGameComponent
                     AnsweredState="_answeredState"
                     ReceivedPoints="_receivedPoints"
@@ -79,6 +82,7 @@
         && await GetRealtimeQuizGameAsync(notNullQuizGameShortId) is RealtimeGameOptionDto notNullGame)
         {
             _game = notNullGame;
+            await StateMachine.RestoreState();
             SubscribeHubHandlers();
             await InitPlayers();
             await ManageQuizHubClient.StartAsync();
@@ -90,6 +94,18 @@
         }
 
         Nav.NavigateTo(Nav.BaseUri);
+    }
+
+    async Task StopQuiz()
+    {
+        if (_game != null)
+        {
+            StateMachine.PreviewQuiz(_game);
+        }
+        PlayGameService.OnQuizEnded -= OnQuizEnded;
+        _gameStarted = false;
+        await SessionStorage.RemoveItemAsync(Constants.SessionStorageKey.GameStarted);
+        StateHasChanged();
     }
 
     async Task InitPlayers()
@@ -108,7 +124,6 @@
         {
             await SessionStorage.SetItemAsync(Constants.SessionStorageKey.GameStarted, true);
             _gameStarted = true;
-
             _game.CurrentQuestionIndex = 0;
             await Http.PutAsJsonAsync($"ManageRealtimeGames/{_game.QuizId}", _game);
         }
@@ -126,6 +141,11 @@
         }
 
         return null;
+    }
+
+    async Task SendAnswerDelegate(string? answerId)
+    {
+        await StateMachine.AnswerQuestion(answerId);
     }
 
     void SubscribeHubHandlers()
@@ -230,7 +250,7 @@
             CorrectAnswerId = correctAnswerId
         };
 
-        PlayGameService.StopTimer();
+        StateMachine.EndTimeForQuestion();
     }
 
     private async Task<RealtimeGameOptionDto?> GetRealtimeQuizGameAsync(string quizGameShortId)

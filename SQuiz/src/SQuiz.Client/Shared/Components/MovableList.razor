@@ -36,18 +36,21 @@
                         @MenuActions?.Invoke(context)
                         <MudMenuItem Icon="@Icons.Material.Filled.Delete"
                                      IconColor="Color.Error"
-                                     @onclick=@(() => RemoveItem(context))>Delete</MudMenuItem>
+                                     @onclick=@(() => RemoveItem(context))
+                                     OnTouch=@(() => RemoveItem(context))>Delete</MudMenuItem>
 
                         @if (((IHasOrder)context).Order > 0)
                         {
                             <MudMenuItem Icon="@Icons.Material.Filled.ArrowUpward"
-                                     @onclick=@(() => MoveUp(context))>Move Up</MudMenuItem>
+                                     @onclick=@(() => MoveUp(context))
+                                     OnTouch=@(() => MoveUp(context))>Move Up</MudMenuItem>
                         }
 
                         @if (((IHasOrder)context).Order + 1 != Items.Count)
                         {
                             <MudMenuItem Icon="@Icons.Material.Filled.ArrowDownward"
-                                     @onclick=@(() => MoveDown(context))>Move Down</MudMenuItem>
+                                     @onclick=@(() => MoveDown(context))
+                                     OnTouch=@(() => MoveDown(context))>Move Down</MudMenuItem>
                         }
                     </MudMenu>
                 </div>

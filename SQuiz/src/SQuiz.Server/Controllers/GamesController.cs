@@ -77,6 +77,8 @@ namespace SQuiz.Server.Controllers
         public async Task<IActionResult> GetGame(int shortId)
         {
             var quizGame = await _context.QuizGames
+                .Include(x => x.Quiz)
+                    .ThenInclude(x => x.Questions)
                 .FirstOrDefaultAsync(x => x.ShortId == shortId);
             var dto = _mapper.Map(quizGame, quizGame?.GetType(), typeof(GameOptionDto));
             Response.Headers.Append(Constants.HeadersKey.ResponseEntityType, dto?.GetType().FullName);

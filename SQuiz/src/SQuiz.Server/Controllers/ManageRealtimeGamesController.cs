@@ -41,18 +41,13 @@ namespace SQuiz.Server.Controllers
         [HttpGet("{shortId}")]
         public async Task<IActionResult> GetGame(int shortId)
         {
-            var result = await _quizContext.RealtimeQuizGames
-                .Select(x => new RealtimeGameOptionDto()
-                {
-                    QuizId = x.QuizId,
-                    Id = x.Id,
-                    QuestionCount = x.Quiz.Questions.Count,
-                    ShortId = x.ShortId,
-                    Name = x.Name,
-                    IsOpen = x.IsOpen,
-                })
+            var game = await _quizContext.QuizGames
+                .Include(x => ((RealtimeQuizGame)x).Quiz)
+                    .ThenInclude(x => x.Questions)
                 .FirstOrDefaultAsync(x => x.ShortId == shortId);
-
+            
+            var result = _mapper.Map<RealtimeGameOptionDto>(game);
+            
             return Ok(result);
         }
 

@@ -17,7 +17,8 @@
         <MenuActions Context="question">
             <MudMenuItem 
                 Icon="@Icons.Material.Filled.Edit"
-                @onclick=@(() => NavigateToEditQuestion(question))>Edit</MudMenuItem>
+                @onclick=@(() => NavigateToEditQuestion(question))
+                OnTouch=@(() => NavigateToEditQuestion(question))>Edit</MudMenuItem>
         </MenuActions>
     </MovableList>
 </StepItem>

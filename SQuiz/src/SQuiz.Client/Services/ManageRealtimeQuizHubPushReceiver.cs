@@ -14,13 +14,13 @@ namespace SQuiz.Client.Services
 
         public Task OnClosed(Exception? exception)
         {
-            _playeGameService.InvokeError(exception?.Message);
+            _playeGameService.InvokeOnError(exception?.Message);
             return Task.CompletedTask;
         }
 
         public Task OnError(string errorMessage)
         {
-            _playeGameService.InvokeError(errorMessage);
+            _playeGameService.InvokeOnError(errorMessage);
             return Task.CompletedTask;
         }
 
@@ -31,7 +31,7 @@ namespace SQuiz.Client.Services
 
         public Task OnReconnecting(Exception? exception)
         {
-            _playeGameService.InvokeError(exception?.Message);
+            _playeGameService.InvokeOnError(exception?.Message);
             return Task.CompletedTask;
         }
     }

@@ -102,7 +102,7 @@
             points.TotalPoints = _totalScore;
         }
 
-        PlayGameService.ReceivePoints(points);
+        PlayGameService.InvokeOnReceivedPoints(points);
 
         return Task.CompletedTask;
     }

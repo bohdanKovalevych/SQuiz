@@ -14,8 +14,9 @@ namespace SQuiz.Shared
             services.AddTransient<IPointsCounter, PointsCounter>();
             services.AddScoped<PlayRealtimeGameService>();
             services.AddScoped<IPlayGameService>(x => x.GetRequiredService<PlayRealtimeGameService>());
-            services.AddScoped<IPlayRealtimeGameService>(x => x.GetRequiredService<PlayRealtimeGameService>());           
-            
+            services.AddScoped<IPlayRealtimeGameService>(x => x.GetRequiredService<PlayRealtimeGameService>());
+            services.AddTransient<IWaiter, Waiter>();
+
             return services;
         }
     }

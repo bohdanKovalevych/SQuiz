@@ -18,32 +18,32 @@ namespace SQuiz.Client.Services
 
         public Task OnAllPlayersAnswered(List<ReceivedPointsDto> playerPoints, string correctAnswerId)
         {
-            _playGameService.InvokeAllPlayersAnswered(playerPoints, correctAnswerId);
+            _playGameService.InvokeOnAllPlayersAnswered(playerPoints, correctAnswerId);
             return Task.CompletedTask;
         }
 
         public Task OnClosed(Exception? exception)
         {
-            _playGameService.InvokeError(exception?.Message);
+            _playGameService.InvokeOnError(exception?.Message);
             return Task.CompletedTask;
         }
 
         public Task OnEndQuiz(List<PlayerDto> playerPoints)
         {
-            _playGameService.EndQuiz();
+            _playGameService.InvokeOnQuizEnded();
             return Task.CompletedTask;
         }
 
         public Task OnError(string message)
         {
-            _playGameService.InvokeError(message);
+            _playGameService.InvokeOnError(message);
             return Task.CompletedTask;
         }
 
         public Task OnGetQuestion(GameQuestionDto question)
         {
             _playGameService.InitQuestion(question);
-            _playGameService.InvokeGetQuestion(question);
+            _playGameService.InvokeOnGetQuestion(question);
             return Task.CompletedTask;
         }
 
@@ -51,11 +51,11 @@ namespace SQuiz.Client.Services
         {
             if (_currentRealtimePlayer.CurrentPlayer?.Id == playerPoints.Player?.Id)
             {
-                _playGameService.ReceivePoints(playerPoints);
+                _playGameService.InvokeOnReceivedPoints(playerPoints);
             }
             else
             {
-                _playGameService.InvokeOtherReceivedPoints(playerPoints);
+                _playGameService.InvokeOnOtherReceivedPoints(playerPoints);
             }
 
             return Task.CompletedTask;
@@ -68,12 +68,12 @@ namespace SQuiz.Client.Services
                 await _currentRealtimePlayer.SetCurrentPlayerAsync(player);
             }
             
-            _playGameService.InvokePlayerJoined(player);
+            _playGameService.InvokeOnPlayerJoined(player);
         }
 
         public Task OnPlayerLeft(PlayerDto player)
         {
-            _playGameService.InvokePlayerLeft(player);
+            _playGameService.InvokeOnPlayerLeft(player);
             return Task.CompletedTask;
         }
 
@@ -89,7 +89,7 @@ namespace SQuiz.Client.Services
 
         public Task OnStartQuiz()
         {
-            _playGameService.InvokeStartQuiz();
+            _playGameService.InvokeOnStartQuiz();
             return Task.CompletedTask;
         }
     }

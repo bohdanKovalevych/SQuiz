@@ -66,6 +66,9 @@
     public Func<Task<GameQuestionDto?>>? GetQuestionDelegate { get; set; }
 
     [Parameter]
+    public Func<string, Task>? SendAnswerDelegate { get; set; }
+
+    [Parameter]
     public bool HideNextButton { get; set; }
 
     [Parameter]
@@ -77,16 +80,11 @@
     [Parameter]
     public bool Hide { get; set; }
 
-    void OnPrepared()
-    {
-        PlayGameService.StartTimer();
-    }
-
     async Task GetQuestion()
     {
         _question = null;
         StateHasChanged();
-        
+
         if (GetQuestionDelegate == null)
         {
             throw new ArgumentNullException();
@@ -96,37 +94,34 @@
 
         if (_question == null)
         {
-            PlayGameService.EndQuiz();
+            PlayGameService.InvokeOnQuizEnded();
             return;
         }
 
-        PlayGameService.InitQuestion(_question);
         StateHasChanged();
     }
 
     public async Task NextQuestion()
     {
         await GetQuestion();
-        PlayGameService.DelayToPrepareForQuestion();
-        AnsweredState = false;
         StateHasChanged();
     }
 
     async Task SendAnswer(GameAnswerDto answer)
     {
-        await PlayGameService.SendAnswer(answer.Id);
+        if (SendAnswerDelegate != null)
+        {
+            await SendAnswerDelegate(answer.Id);
+        }
     }
 
     protected override async Task OnInitializedAsync()
     {
-        PlayGameService.OnPrepared += OnPrepared;
-        await GetQuestion();
-        PlayGameService.DelayToPrepareForQuestion();
+        await NextQuestion();
     }
 
     public void Dispose()
     {
-        PlayGameService.OnPrepared -= OnPrepared;
-        PlayGameService.EndQuiz();
+        PlayGameService.InvokeOnQuizEnded();
     }
 }

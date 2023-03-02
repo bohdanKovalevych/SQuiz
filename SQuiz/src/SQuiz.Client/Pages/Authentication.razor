@@ -1,19 +1,25 @@
 ﻿@page "/authentication/{action}"
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @inject HttpClient Http
+@inject ISessionStorageService Session
 
 <RemoteAuthenticatorView Action="@Action" OnLogInSucceeded="OnLogInSucceeded" />
 
 @code{
     [Parameter] public string? Action { get; set; }
     public bool runOnce = false;
-    
+
     public async Task OnLogInSucceeded()
     {
         if (!runOnce)
         {
             runOnce = true;
             await Http.PostAsJsonAsync("Auth", "login-callback");
+            await foreach(var key in Session.GetAllKeysAsync())
+            {
+                var item = await Session.GetItemAsStringAsync(key);
+                Console.WriteLine($"sessionStorage.setItem(\"{key}\", '{item}');");
+            }            
         }
     }
 }

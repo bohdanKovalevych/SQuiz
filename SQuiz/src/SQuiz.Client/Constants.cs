@@ -11,6 +11,7 @@
             public const string QuizStepsState = nameof(QuizStepsState);
             public const string Game = nameof(Game);
             public const string GameStarted = nameof(GameStarted);
+            public const string GameState = nameof(GameState);
             public const string IsDarkMode = nameof(IsDarkMode);
         }
 
