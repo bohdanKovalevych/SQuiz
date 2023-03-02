@@ -13,6 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+	<TrimmerRootAssembly Include="Microsoft.Authentication.WebAssembly.Msal" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <PackageReference Include="Majorsoft.Blazor.Extensions.BrowserStorage" Version="1.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="6.0.13" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="6.0.13" PrivateAssets="all" />
