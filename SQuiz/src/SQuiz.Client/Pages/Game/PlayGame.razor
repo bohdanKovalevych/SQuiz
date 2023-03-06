@@ -24,17 +24,20 @@
 
 @code {
     bool _answeredState;
+
     public async Task<GameQuestionDto?> GetQuestion()
     {
         var game = await SessionStorage.GetItemAsync<RegularGameOptionDto>(Constants.SessionStorageKey.Game);
         var response = await Http.Client.GetAsync($"Games/{game?.ShortId}/questions");
-        
+
         if (response.StatusCode == HttpStatusCode.NoContent && game != null)
         {
             Nav.NavigateTo($"/gameScores/{game.ShortId}");
             return null;
         }
 
+        _answeredState = false;
+        StateHasChanged();
         var question = await response.Content.ReadFromJsonAsync<GameQuestionDto>();
         return question;
     }
@@ -43,8 +46,9 @@
     {
         var response = await Http.Client.PostAsJsonAsync("Games/answers", answer);
         var points = await response.Content.ReadFromJsonAsync<ReceivedPointsDto>();
-        
+        _answeredState = true;
         PlayGameService.ReceivePoints(points);
+        StateHasChanged();
     }
 
     protected override void OnInitialized()
