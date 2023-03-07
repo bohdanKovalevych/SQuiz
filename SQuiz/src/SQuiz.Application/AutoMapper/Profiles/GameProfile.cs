@@ -19,7 +19,12 @@ namespace SQuiz.Application.AutoMapper.Profiles
 
             CreateMap<RealtimeGameOptionDto, RealtimeQuizGame>()
                 .IncludeBase<GameOptionDto, QuizGame>()
-                .ReverseMap();
+                .ReverseMap()
+                .ForMember(x => x.QuestionCount, x => 
+                {
+                    x.Condition(x => x.Quiz != null);
+                    x.MapFrom(x => x.Quiz.Questions.Count);
+                });
 
             CreateMap<GameQuestionDto, Question>()
                .ReverseMap();
