@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using QRCoder;
 using SQuiz.Client.Interfaces;
 
 namespace SQuiz.Client.Services
@@ -42,6 +43,16 @@ namespace SQuiz.Client.Services
         public string GetLink(int gameShortId)
         {
             return $"{_nav.BaseUri}chooseGame?game={gameShortId}";
+        }
+
+        public string GetQrCode(int gameShortId)
+        {
+            var qrGenerator = new QRCodeGenerator();
+            QRCodeData qrCodeData = qrGenerator.CreateQrCode(GetLink(gameShortId), QRCodeGenerator.ECCLevel.Q);
+            var qrCode = new PngByteQRCode(qrCodeData);
+            var result = qrCode.GetGraphic(5);
+            
+            return Convert.ToBase64String(result);
         }
 
         public async Task JoinWithExistingId(string id)

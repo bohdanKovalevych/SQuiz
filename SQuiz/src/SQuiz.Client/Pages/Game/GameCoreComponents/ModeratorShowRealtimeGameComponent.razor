@@ -8,9 +8,12 @@
 
 @if (Game != null)
 {
-    <MudPaper Elevation="0" Class="d-flex animation flex-row justify-center gap-2">
-        <MudText Style="blue-text">@InitGameService.GetLink(Game.ShortId)</MudText>
-        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy" OnClick="() => InitGameService.CopyLink(Game.ShortId)" />
+    <div class="d-flex justify-center">
+        <img src=@($"data:image/png;base64,{InitGameService.GetQrCode(Game.ShortId)}") />
+    </div>
+    <MudPaper Elevation="0" Class="d-flex flex-row justify-center gap-2 my-2">
+        <MudText Class="blue-text" Style="overflow-wrap: anywhere;">@InitGameService.GetLink(Game.ShortId)</MudText>
+        <MudIconButton Icon=@(_copied ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.ContentCopy) OnClick="Copy" />
     </MudPaper>
     <MudText>Game code is: @Game.ShortId</MudText>
 }
@@ -38,6 +41,19 @@
            @onclick="OnStart">Start</MudButton>
 
 @code {
+    bool _copied;
+
+    async Task Copy()
+    {
+        if(Game != null)
+        {
+            _copied = true;
+            await InitGameService.CopyLink(Game.ShortId);
+            await Task.Delay(500);
+            _copied = false;
+        }
+    }
+
     [Parameter]
     public RealtimeGameOptionDto? Game { get; set; }
 

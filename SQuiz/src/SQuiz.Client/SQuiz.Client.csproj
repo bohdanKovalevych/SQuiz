@@ -25,6 +25,7 @@
     <PackageReference Include="Microsoft.Authentication.WebAssembly.Msal" Version="6.0.13" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
 	<PackageReference Include="MudBlazor" Version="6.1.7" />
+	<PackageReference Include="QRCoder" Version="1.4.3" />
 	<PackageReference Include="Stateless" Version="5.13.0" />
 	<PackageReference Include="TypedSignalR.Client" Version="3.3.0">
 	  <PrivateAssets>all</PrivateAssets>

@@ -11,5 +11,6 @@
         Task JoinWithExistingId(string id);
         Task CopyLink(int gameShortId);
         string GetLink(int gameShortId);
+        string GetQrCode(int gameShortId);
     }
 }
